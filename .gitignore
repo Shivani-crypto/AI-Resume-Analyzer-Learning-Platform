@@ -1,0 +1,35 @@
+# Environments
+.env
+.env.local
+venv/
+env/
+ENV/
+
+# Python runtime
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+
+# Databases
+*.db
+*.sqlite3
+
+# Uploads & Runtime Artifacts
+uploads/
+certificates/
+faiss_index/
+temp_*
+report*.pdf
+
+# IDE & System
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Large archive files
+*.rar
+*.zip
+*.mkv

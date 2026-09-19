@@ -1,0 +1,66 @@
+We are looking for a skilled Full Stack Developer to design, build, and maintain scalable web applications and campaign management platforms. You will own the end-to-end development lifecycle, ensure platform stability, and collaborate closely with sales, marketing, and operations teams.
+Roles & Responsibilities 
+
+System Architecture & Development
+● Design, develop, and oversee scalable web applications and campaign management systems
+● Ensure best practices in coding standards, system architecture, and deployment pipelines
+● Take full ownership of the end-to-end development lifecycle
+Campaign Platform Management
+● Oversee creation and management of campaigns within the web application
+● Ensure system readiness, stability, and scalability for multiple concurrent campaigns
+● Optimize platform performance for a seamless user experience
+Website & Application Deployment
+● Manage development, hosting, and deployment of web applications and sites
+● Ensure high availability, uptime, and performance across all deployed systems
+● Implement and maintain CI/CD practices for efficient, error-free deployments
+Payment Integration & Security
+● Manage and maintain payment gateway integrations and end-to-end payment workflows
+● Ensure secure transaction handling and compliance with payment security standards (PCI-DSS)
+● Proactively monitor and resolve payment-related incidents
+Performance, Security & Maintenance
+● Ensure optimal system performance, speed, and responsiveness across all platforms
+● Implement security best practices to protect applications and user data
+● Conduct regular maintenance cycles, dependency updates, and performance audits
+Team Leadership & Collaboration
+● Guide and mentor junior developers to ensure high-quality output
+● Collaborate with product, marketing, and operations teams for requirements alignment
+● Allocate tasks effectively and drive timely delivery of development projects
+Campaign Support & Reporting
+● Create campaigns and execute all related technical work
+● Generate reports and MIS dashboards aligned to campaign and client needs
+● Generate winner links and manage campaign outputs per defined criteria
+Required Skills & Qualifications
+Frontend
+● Proficiency in React.js / Next.js (or equivalent modern framework)
+● Strong command of HTML5, CSS3, JavaScript (ES6+), and TypeScript
+● Experience building responsive, accessible, and performant UIs
+Backend
+● Hands-on experience with Node.js, Python, or PHP for server-side development
+● RESTful API design and development; familiarity with GraphQL is a plus
+● Experience with microservices or modular monolith architecture
+Database & Storage
+● Proficient in relational databases: MySQL / PostgreSQL
+● Experience with NoSQL databases: MongoDB, Redis
+● Understanding of database optimization, indexing, and query tuning
+DevOps & Cloud
+● Experience with CI/CD pipelines (GitHub Actions, Jenkins, or equivalent)
+● Familiarity with cloud platforms: AWS, GCP, or Azure
+● Working knowledge of Docker, Kubernetes, or containerized deployments
+Security & Payments
+● Experience integrating payment gateways (Razorpay, Stripe, PayU, or similar)
+● Understanding of OWASP top 10 and application security best practices
+● PCI-DSS awareness and secure coding practices
+Education & Experience
+● B.E. / B.Tech / MCA in Computer Science, Information Technology, or equivalent
+● Minimum 2 years of hands-on full stack development experience
+● Prior experience working on campaign management systems or high-traffic web platforms is preferred
+Good to Have
+● Experience with real-time systems (Web Sockets, server-sent events)
+● Familiarity with headless CMS or marketing automation platforms
+● Knowledge of analytics tools and MIS reporting frameworks
+● Exposure to A/B testing, feature flagging, and experimentation platforms
+ What We Offer
+● Opportunity to lead and architect high-scale campaign and web platforms
+● Collaborative, fast-paced environment with cross-functional exposure
+● Competitive compensation and performance-based incentives
+● Direct impact on product, engineering culture, and team growth

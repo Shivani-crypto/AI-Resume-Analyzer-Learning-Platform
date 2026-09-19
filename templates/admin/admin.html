@@ -1,0 +1,1890 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Platform - Executive System Admin Console</title>
+    <link rel="stylesheet" href="/learning_static/css/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --admin-bg: #f8fafc;
+            --admin-card: #ffffff;
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --accent-green: #059669;
+            --accent-red: #dc2626;
+            --accent-purple: #7e22ce;
+            --accent-amber: #d97706;
+            --accent-pink: #db2777;
+            --text-main: #0f172a;
+            --text-sub: #64748b;
+            --border-glass: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--admin-bg);
+            background-image:
+                radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.06) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.06) 0px, transparent 50%);
+            color: var(--text-main);
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            padding: 24px;
+            min-height: 100vh;
+        }
+
+        /* Header Bar */
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 18px;
+            border-bottom: 1px solid var(--border-glass);
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .header-title-group h1 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin: 0 0 6px 0;
+            background: linear-gradient(135deg, #1e1b4b, #4338ca, #6366f1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.8rem;
+            background: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #10b981;
+            box-shadow: 0 0 8px #10b981;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.4;
+                transform: scale(1.2);
+            }
+
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        /* Alert Banner */
+        .alert {
+            padding: 14px 20px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 25px;
+            display: none;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            backdrop-filter: blur(8px);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Stat Overview KPI Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: #ffffff;
+            border: 1px solid var(--border-glass);
+            border-radius: 18px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+            transition: all 0.25s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #6366f1, transparent);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px rgba(79, 70, 229, 0.12);
+            border-color: #c7d2fe;
+        }
+
+        .stat-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            flex-shrink: 0;
+        }
+
+        .stat-val {
+            font-size: 1.75rem;
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 2px;
+            color: #0f172a;
+        }
+
+        .stat-lbl {
+            font-size: 0.82rem;
+            color: var(--text-sub);
+            font-weight: 600;
+        }
+
+        .stat-badge {
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-weight: 700;
+            margin-top: 4px;
+            display: inline-block;
+        }
+
+        /* Tab Controls */
+        .admin-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            border-bottom: 1px solid var(--border-glass);
+            padding-bottom: 12px;
+            overflow-x: auto;
+            scrollbar-width: thin;
+        }
+
+        .tab-btn {
+            background: #ffffff;
+            border: 1px solid var(--border-glass);
+            color: #475569;
+            padding: 11px 22px;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.92rem;
+            transition: all 0.25s ease;
+            white-space: nowrap;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+        }
+
+        .tab-btn:hover {
+            background: #f1f5f9;
+            color: #0f172a;
+            border-color: #cbd5e1;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, #4f46e5, #6366f1);
+            color: #ffffff;
+            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.35);
+            border-color: #4338ca;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Panels & Tables */
+        .panel-card {
+            background: #ffffff;
+            border: 1px solid var(--border-glass);
+            border-radius: 18px;
+            padding: 24px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+            margin-bottom: 25px;
+        }
+
+        .panel-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #1e1b4b;
+            margin-top: 0;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .panel-title span {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+            border-radius: 12px;
+            border: 1px solid var(--border-glass);
+            background: #ffffff;
+        }
+
+        table.admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.88rem;
+        }
+
+        table.admin-table th {
+            background: #f8fafc;
+            padding: 14px 16px;
+            border-bottom: 2px solid var(--border-glass);
+            color: #475569;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.6px;
+        }
+
+        table.admin-table td {
+            padding: 14px 16px;
+            border-bottom: 1px solid #f1f5f9;
+            vertical-align: middle;
+            color: #0f172a;
+        }
+
+        table.admin-table tr:hover {
+            background: #f8fafc;
+        }
+
+        /* Badges & Buttons */
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-admin {
+            background: #fef2f2;
+            color: #dc2626;
+            border: 1px solid #fca5a5;
+        }
+
+        .badge-user {
+            background: #eef2ff;
+            color: #4f46e5;
+            border: 1px solid #c7d2fe;
+        }
+
+        .badge-premium {
+            background: #ecfdf5;
+            color: #059669;
+            border: 1px solid #a7f3d0;
+        }
+
+        .badge-free {
+            background: #f1f5f9;
+            color: #64748b;
+            border: 1px solid #cbd5e1;
+        }
+
+        .badge-purple {
+            background: #faf5ff;
+            color: #7e22ce;
+            border: 1px solid #e9d5ff;
+        }
+
+        .btn-sm {
+            padding: 7px 14px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-danger {
+            background: #fef2f2;
+            color: #dc2626;
+            border: 1px solid #fca5a5;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+            color: white;
+        }
+
+        .btn-action {
+            background: #eef2ff;
+            color: #4338ca;
+            border: 1px solid #c7d2fe;
+        }
+
+        .btn-action:hover {
+            background: #4f46e5;
+            color: white;
+        }
+
+        .btn-sub {
+            background: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+        }
+
+        .btn-sub:hover {
+            background: #059669;
+            color: white;
+        }
+
+        .btn-purple {
+            background: #faf5ff;
+            color: #7e22ce;
+            border: 1px solid #e9d5ff;
+        }
+
+        .btn-purple:hover {
+            background: #7e22ce;
+            color: white;
+        }
+
+        .search-box {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            padding: 9px 16px;
+            border-radius: 10px;
+            color: #0f172a;
+            font-size: 0.85rem;
+            width: 260px;
+            transition: all 0.2s ease;
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+        }
+
+        .admin-grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+
+        /* Course Cards Grid */
+        .courses-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .course-admin-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .course-admin-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #1e1b4b;
+            margin-bottom: 8px;
+        }
+
+        .course-admin-desc {
+            font-size: 0.82rem;
+            color: var(--text-sub);
+            margin-bottom: 15px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        @media (max-width: 900px) {
+            .admin-grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Header Section -->
+    <div class="admin-header">
+        <div class="header-title-group">
+            <h1><i class="fa-solid fa-shield-halved"></i> Executive Admin Control Center</h1>
+            <div class="header-status-pill">
+                <span class="status-dot"></span> System Live | Ollama Gemma3:1b Active
+            </div>
+        </div>
+        <div class="header-actions">
+            <button onclick="openCreateUserModal()" class="btn-sm btn-sub"><i class="fa-solid fa-user-plus"></i> Add New
+                User</button>
+            <button onclick="loadDashboardData()" class="btn-sm btn-action"><i class="fa-solid fa-arrows-rotate"></i>
+                Refresh Data</button>
+        </div>
+    </div>
+
+    <!-- Dynamic Alert Banner -->
+    <div id="admin-alert" class="alert hidden"></div>
+
+    <!-- Stat Overview KPI Cards -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: #e0e7ff; color: #4338ca;">
+                <i class="fa-solid fa-users"></i>
+            </div>
+            <div>
+                <div class="stat-val" id="stat-users">0</div>
+                <div class="stat-lbl">Registered Accounts</div>
+                <span class="stat-badge badge-user">System Accounts</span>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon" style="background: #d1fae5; color: #047857;">
+                <i class="fa-solid fa-award"></i>
+            </div>
+            <div>
+                <div class="stat-val" id="stat-certificates">0</div>
+                <div class="stat-lbl">Certificates Issued</div>
+                <span class="stat-badge badge-premium">100% Verifiable</span>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon" style="background: #fef3c7; color: #b45309;">
+                <i class="fa-solid fa-file-pdf"></i>
+            </div>
+            <div>
+                <div class="stat-val" id="stat-resumes">0</div>
+                <div class="stat-lbl">Resumes Analyzed</div>
+                <span class="stat-badge badge-free">AI Skill Extracted</span>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon" style="background: #fce7f3; color: #be185d;">
+                <i class="fa-solid fa-eye"></i>
+            </div>
+            <div>
+                <div class="stat-val" id="stat-views">0</div>
+                <div class="stat-lbl">Total Viewed Interactions</div>
+                <span class="stat-badge badge-purple">Activity Logs</span>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon" style="background: #f3e8ff; color: #7e22ce;">
+                <i class="fa-solid fa-robot"></i>
+            </div>
+            <div>
+                <div class="stat-val" style="font-size: 1.1rem; color: #6b21a8; font-weight: 700;">Gemma3:1b</div>
+                <div class="stat-lbl">AI Engine</div>
+                <span class="stat-badge badge-purple">Local Ollama LLM</span>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon" style="background: #dcfce7; color: #15803d;">
+                <i class="fa-solid fa-wallet"></i>
+            </div>
+            <div>
+                <div class="stat-val" id="stat-revenue" style="color: #15803d; font-weight: 700;">₹0.00</div>
+                <div class="stat-lbl">Admin Revenue (View)</div>
+                <span class="stat-badge badge-premium" style="background: #dcfce7; color: #15803d;">FREE100 + ₹999</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="admin-tabs">
+        <button class="tab-btn active" onclick="switchTab('tab-users', this)"><i class="fa-solid fa-users-gear"></i>
+            User Management</button>
+        <button class="tab-btn" onclick="switchTab('tab-certificates', this)"><i class="fa-solid fa-certificate"></i>
+            Certificates Ledger</button>
+        <button class="tab-btn" onclick="switchTab('tab-courses', this)"><i class="fa-solid fa-layer-group"></i> Course
+            & Content Uploads</button>
+        <button class="tab-btn" onclick="switchTab('tab-history', this)"><i class="fa-solid fa-clock-rotate-left"></i>
+            User Viewed History</button>
+        <button class="tab-btn" onclick="switchTab('tab-logs', this)"><i class="fa-solid fa-terminal"></i> System Audit
+            Logs</button>
+    </div>
+
+    <!-- TAB 1: USER MANAGEMENT -->
+    <div id="tab-users" class="tab-content active">
+        <div class="panel-card">
+            <div class="panel-title">
+                <span><i class="fa-solid fa-users" style="color: #4f46e5;"></i> Registered Accounts & Executive Access
+                    Controls</span>
+                <div style="display:flex; gap: 10px;">
+                    <input type="text" id="user-search" class="search-box" placeholder="Search user name or email..."
+                        onkeyup="filterUsers()">
+                    <button onclick="openCreateUserModal()" class="btn-sm btn-sub"><i class="fa-solid fa-plus"></i> Add
+                        Account</button>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>User Name</th>
+                            <th>Email Address</th>
+                            <th>Role</th>
+                            <th>Package Taken & Details</th>
+                            <th>Activity Metrics</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-table-body">
+                        <tr>
+                            <td colspan="7" style="text-align:center; padding: 25px; color: var(--text-sub);">Loading
+                                users list...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 2: CERTIFICATES LEDGER -->
+    <div id="tab-certificates" class="tab-content">
+        <div class="panel-card">
+            <div class="panel-title">
+                <span><i class="fa-solid fa-award" style="color: #059669;"></i> Generated Certificates & Verification
+                    Ledger</span>
+                <input type="text" id="cert-search" class="search-box"
+                    placeholder="Search certificate title or student..." onkeyup="filterCertificates()">
+            </div>
+            <div class="table-responsive">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Cert UUID</th>
+                            <th>Student Name</th>
+                            <th>Email</th>
+                            <th>Course / Skill Title</th>
+                            <th>Score %</th>
+                            <th>Issued Date</th>
+                            <th>Verify / Link</th>
+                        </tr>
+                    </thead>
+                    <tbody id="certs-table-body">
+                        <tr>
+                            <td colspan="7" style="text-align:center; padding: 25px; color: var(--text-sub);">Loading
+                                certificates ledger...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 3: COURSE & CONTENT MANAGEMENT -->
+    <div id="tab-courses" class="tab-content">
+        <div class="panel-card" style="margin-bottom: 25px;">
+            <div class="panel-title"><span><i class="fa-solid fa-book-open" style="color: #7e22ce;"></i> Live Platform
+                    Courses</span></div>
+            <div class="courses-grid" id="courses-grid-container">
+                <p style="color: var(--text-sub);">Loading platform courses...</p>
+            </div>
+        </div>
+
+        <div class="admin-grid-2">
+            <div class="panel-card">
+                <div class="panel-title"><span><i class="fa-solid fa-plus-circle" style="color: #4f46e5;"></i> Create
+                        New Course</span></div>
+                <form id="create-course-form">
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label
+                            style="color: var(--text-sub); display: block; margin-bottom: 5px; font-weight: 600;">Category
+                            ID</label>
+                        <input type="number" id="c-cat-id" class="form-control"
+                            style="width: 100%; padding: 10px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; color: #0f172a;"
+                            required value="1">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label
+                            style="color: var(--text-sub); display: block; margin-bottom: 5px; font-weight: 600;">Course
+                            Title</label>
+                        <input type="text" id="c-title" class="form-control"
+                            style="width: 100%; padding: 10px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; color: #0f172a;"
+                            required placeholder="e.g. Fullstack React & AI Engineering">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label
+                            style="color: var(--text-sub); display: block; margin-bottom: 5px; font-weight: 600;">Description
+                            (Optional)</label>
+                        <textarea id="c-desc" class="form-control" rows="3"
+                            style="width: 100%; padding: 10px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; color: #0f172a;"
+                            placeholder="Comprehensive hands-on breakdown... (Auto-generated if left empty)"></textarea>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label
+                            style="color: var(--text-sub); display: block; margin-bottom: 5px; font-weight: 600;">Difficulty
+                            Level</label>
+                        <select id="c-diff" class="form-control"
+                            style="width: 100%; padding: 10px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; color: #0f172a;">
+                            <option value="Beginner">Beginner</option>
+                            <option value="Intermediate" selected>Intermediate</option>
+                            <option value="Advanced">Advanced</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-sm btn-action"
+                        style="width: 100%; padding: 12px; justify-content: center; font-size: 1rem;"><i
+                            class="fa-solid fa-floppy-disk"></i> Create Course</button>
+                </form>
+            </div>
+
+            <div class="panel-card">
+                <div class="panel-title"><span><i class="fa-solid fa-cloud-arrow-up" style="color: #059669;"></i> Upload
+                        Lesson Media & FAISS RAG PDF</span></div>
+                <form id="upload-media-form">
+                    <!-- Step 1: Course Selector -->
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label style="color: var(--text-sub); display: block; margin-bottom: 5px; font-weight: 700;">
+                            <i class="fa-solid fa-book" style="color: #4f46e5;"></i> 1. Select Target Course
+                        </label>
+                        <select id="u-course-id" class="form-control" onchange="onAdminCourseChange()"
+                            style="width: 100%; padding: 10px; background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 8px; color: #0f172a; font-weight: 600;">
+                            <option value="">-- Choose Course --</option>
+                        </select>
+                    </div>
+
+                    <!-- Step 2: Lesson Selector or Add New -->
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                            <label style="color: var(--text-sub); margin: 0; font-weight: 700;">
+                                <i class="fa-solid fa-list-check" style="color: #4f46e5;"></i> 2. Target Lesson
+                            </label>
+                            <label style="font-size: 0.8rem; color: #4f46e5; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                                <input type="checkbox" id="u-create-new-toggle" onchange="toggleNewLessonMode()">
+                                <span>+ Add as New Lesson</span>
+                            </label>
+                        </div>
+                        
+                        <!-- Existing Lesson Dropdown -->
+                        <div id="u-existing-lesson-group">
+                            <select id="u-lesson-id" class="form-control" onchange="loadSelectedLessonMediaAdmin()"
+                                style="width: 100%; padding: 10px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; color: #0f172a;">
+                                <option value="1">Select or load course lessons...</option>
+                            </select>
+                        </div>
+
+                        <!-- New Lesson Title Input Mode -->
+                        <div id="u-new-lesson-group" style="display: none; margin-top: 8px;">
+                            <input type="text" id="u-lesson-title" class="form-control"
+                                placeholder="e.g. Lesson 2: Object-Oriented Programming (OOP)"
+                                style="width: 100%; padding: 10px; background: #f8fafc; border: 1.5px solid #6366f1; border-radius: 8px; color: #0f172a; font-weight: 600;">
+                            <small style="color: #6366f1; font-size: 0.75rem; font-weight: 600; margin-top: 3px; display: block;">
+                                Will be automatically added to the selected course.
+                            </small>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Required Plan Selector -->
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label style="color: var(--text-sub); display: block; margin-bottom: 5px; font-weight: 700;">
+                            <i class="fa-solid fa-crown" style="color: #f59e0b;"></i> Required Access Plan for Video & Notes:
+                        </label>
+                        <select id="u-required-plan" class="form-control"
+                            style="width: 100%; padding: 10px; background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 8px; color: #0f172a; font-weight: 600;">
+                            <option value="free">Free Tier Access (0)</option>
+                            <option value="99">Starter Plan (₹99)</option>
+                            <option value="999">Pro Plan (₹999)</option>
+                            <option value="4999">VIP Lifetime Plan (₹4,999)</option>
+                        </select>
+                    </div>
+
+                    <!-- Step 3: Video File -->
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label style="color: var(--text-sub); display: block; margin-bottom: 5px; font-weight: 600;">
+                            <i class="fa-solid fa-video" style="color: #059669;"></i> Upload Lesson Video (MP4/WebM)
+                        </label>
+                        <input type="file" id="u-video" accept="video/*"
+                            style="width: 100%; padding: 10px; background: #ffffff; border: 1px dashed #4f46e5; border-radius: 8px; color: var(--text-sub);">
+                    </div>
+
+                    <!-- Step 4: Notes File -->
+                    <div class="form-group" style="margin-bottom: 20px;">
+                        <label style="color: var(--text-sub); display: block; margin-bottom: 5px; font-weight: 600;">
+                            <i class="fa-solid fa-file-pdf" style="color: #be185d;"></i> Upload PDF Notes (FAISS AI RAG Index)
+                        </label>
+                        <input type="file" id="u-notes" accept="application/pdf"
+                            style="width: 100%; padding: 10px; background: #ffffff; border: 1px dashed #4f46e5; border-radius: 8px; color: var(--text-sub);">
+                    </div>
+
+                    <button type="submit" class="btn-sm btn-sub"
+                        style="width: 100%; padding: 12px; justify-content: center; font-size: 1rem;"><i
+                            class="fa-solid fa-cloud-arrow-up"></i> Upload & Save Lesson Media</button>
+                </form>
+
+                <div id="admin-current-media-card"
+                    style="display: none; margin-top: 24px; padding: 18px; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <h4
+                            style="margin: 0; font-size: 1rem; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+                            <i class="fa-solid fa-photo-film" style="color: #4f46e5;"></i> Attached Media & Notes for
+                            Selected Lesson
+                        </h4>
+                        <button type="button" onclick="loadSelectedLessonMediaAdmin()" class="btn-sm btn-sub"
+                            style="padding: 4px 12px; font-size: 0.8rem;">
+                            <i class="fa-solid fa-arrows-rotate"></i> Refresh
+                        </button>
+                    </div>
+                    <div id="admin-media-details" style="font-size: 0.88rem; color: #475569;">
+                        <div style="margin-bottom: 10px; font-size: 0.95rem;">
+                            <strong>Lesson Title:</strong> <span id="admin-cur-lesson-title"
+                                style="color: #0f172a; font-weight: 700;">Loading...</span>
+                        </div>
+
+                        <!-- Video Preview Section in Admin -->
+                        <div id="admin-video-box"
+                            style="margin-bottom: 16px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 10px; padding: 14px;">
+                            <div
+                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <strong
+                                    style="color: #2563eb; display: flex; align-items: center; gap: 6px; font-size: 0.95rem;">
+                                    <i class="fa-solid fa-video"></i> Uploaded Lesson Video (MP4)
+                                </strong>
+                                <span id="admin-video-badge" class="badge badge-premium">Active Video</span>
+                            </div>
+                            <div style="margin-bottom: 10px; word-break: break-all; font-size: 0.85rem;">
+                                <strong>File URL:</strong> <a id="admin-cur-video-link" href="#" target="_blank"
+                                    style="color: #2563eb; text-decoration: underline;">Loading...</a>
+                            </div>
+                            <div id="admin-video-player-container"
+                                style="background: #000; border-radius: 8px; overflow: hidden; margin-bottom: 12px; max-height: 280px; display: flex; justify-content: center; align-items: center;">
+                                <video id="admin-cur-video-player" src="" controls preload="metadata"
+                                    style="width: 100%; max-height: 280px;"></video>
+                            </div>
+                            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                <a id="admin-cur-video-view" href="#" target="_blank" class="btn-sm btn-action"
+                                    style="background: #2563eb; border: none; text-decoration: none; padding: 7px 15px; font-size: 0.85rem; color: white; display: inline-flex; align-items: center; gap: 6px;">
+                                    <i class="fa-solid fa-play"></i> Watch Uploaded Video
+                                </a>
+                                <a id="admin-cur-video-download" href="#" download class="btn-sm btn-sub"
+                                    style="background: white; color: #2563eb; border: 1.5px solid #2563eb; text-decoration: none; padding: 7px 15px; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 6px;">
+                                    <i class="fa-solid fa-download"></i> Download Video
+                                </a>
+                                <a id="admin-preview-student-btn" href="#" target="_blank" class="btn-sm btn-sub"
+                                    style="background: #eef2ff; color: #4338ca; border: 1.5px solid #c7d2fe; text-decoration: none; padding: 7px 15px; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 6px;">
+                                    <i class="fa-solid fa-graduation-cap"></i> Preview in Student Player
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- PDF Notes Section in Admin -->
+                        <div id="admin-notes-box"
+                            style="background: #fdf2f8; border: 1px solid #fbcfe8; border-radius: 10px; padding: 14px;">
+                            <div
+                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <strong
+                                    style="color: #be185d; display: flex; align-items: center; gap: 6px; font-size: 0.95rem;">
+                                    <i class="fa-solid fa-file-pdf"></i> PDF Notes & AI Vector RAG
+                                </strong>
+                                <span class="badge" style="background: #ec4899; color: white;">Indexed in AI
+                                    Tutor</span>
+                            </div>
+                            <div style="margin-bottom: 10px; word-break: break-all; font-size: 0.85rem;">
+                                <strong>File Name:</strong> <span id="admin-cur-notes-name"
+                                    style="color: #be185d; font-weight: 600;">Loading...</span>
+                            </div>
+                            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                <a id="admin-cur-notes-download" href="#" target="_blank" download
+                                    class="btn-sm btn-sub"
+                                    style="background: #be185d; border: none; text-decoration: none; padding: 7px 15px; font-size: 0.85rem; color: white;">
+                                    <i class="fa-solid fa-download"></i> Download PDF Notes
+                                </a>
+                                <a id="admin-cur-notes-view" href="#" target="_blank" class="btn-sm btn-sub"
+                                    style="background: white; color: #be185d; border: 1.5px solid #be185d; text-decoration: none; padding: 7px 15px; font-size: 0.85rem;">
+                                    <i class="fa-solid fa-arrow-up-right-from-square"></i> Open in New Tab
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 4: USER VIEWED HISTORY LOGS -->
+    <div id="tab-history" class="tab-content">
+        <div class="panel-card">
+            <div class="panel-title">
+                <span><i class="fa-solid fa-eye" style="color: #db2777;"></i> User Viewed History & Course
+                    Interactions</span>
+                <input type="text" id="history-search" class="search-box" placeholder="Search user email or course..."
+                    onkeyup="filterHistory()">
+            </div>
+            <div class="table-responsive" style="max-height: 520px; overflow-y: auto;">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>User Email</th>
+                            <th>Item / Activity Type</th>
+                            <th>Title / Description</th>
+                            <th>Timestamp</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history-table-body">
+                        <tr>
+                            <td colspan="4" style="text-align:center; padding: 25px; color: var(--text-sub);">Loading
+                                user viewed history...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 5: SYSTEM AUDIT LOGS -->
+    <div id="tab-logs" class="tab-content">
+        <div class="panel-card">
+            <div class="panel-title">
+                <span><i class="fa-solid fa-terminal" style="color: #4f46e5;"></i> Live System Audit & Activity
+                    Logs</span>
+                <button onclick="loadDashboardData()" class="btn-sm btn-action"><i class="fa-solid fa-rotate"></i>
+                    Refresh Logs</button>
+            </div>
+            <div
+                style="background: #f8fafc; border-radius: 12px; border: 1px solid var(--border-glass); padding: 20px; max-height: 520px; overflow-y: auto;">
+                <ul id="logs-list"
+                    style="list-style: none; padding: 0; margin: 0; font-family: monospace; font-size: 0.88rem; line-height: 1.8;">
+                    <li style="color: var(--text-sub);">Loading system audit logs...</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Resumes Modal -->
+    <div id="resumesModal"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15,23,42,0.5); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(8px);">
+        <div class="panel-card"
+            style="width: 100%; max-width: 620px; padding: 2rem; position: relative; max-height: 85vh; overflow-y: auto; background: #ffffff; border: 1px solid #cbd5e1; box-shadow: 0 20px 40px rgba(0,0,0,0.15);">
+            <button onclick="document.getElementById('resumesModal').style.display='none'"
+                style="position: absolute; top: 1rem; right: 1.5rem; background: none; border: none; font-size: 1.6rem; cursor: pointer; color: #475569;">&times;</button>
+            <h3 id="modal-user-name" style="margin-top:0; color: #1e1b4b; font-size: 1.3rem;">Candidate Resumes
+                Breakdown</h3>
+            <div id="modal-resumes-content"></div>
+        </div>
+    </div>
+
+    <!-- Add New User Modal -->
+    <div id="createUserModal"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15,23,42,0.5); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(8px);">
+        <div class="panel-card"
+            style="width: 100%; max-width: 480px; padding: 2rem; position: relative; background: #ffffff; border: 1px solid #cbd5e1; box-shadow: 0 20px 40px rgba(0,0,0,0.15);">
+            <button onclick="document.getElementById('createUserModal').style.display='none'"
+                style="position: absolute; top: 1rem; right: 1.5rem; background: none; border: none; font-size: 1.6rem; cursor: pointer; color: #475569;">&times;</button>
+            <h3 style="margin-top:0; color: #1e1b4b; font-size: 1.3rem; margin-bottom: 1.5rem;"><i
+                    class="fa-solid fa-user-plus" style="color: #4f46e5;"></i> Provision New User Account</h3>
+            <form id="create-user-modal-form">
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label style="color: var(--text-sub); display: block; margin-bottom: 5px; font-weight: 600;">Full
+                        Name</label>
+                    <input type="text" id="nu-name" class="form-control"
+                        style="width: 100%; padding: 10px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; color: #0f172a;"
+                        required placeholder="e.g. John Doe">
+                </div>
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label style="color: var(--text-sub); display: block; margin-bottom: 5px; font-weight: 600;">Email
+                        Address</label>
+                    <input type="email" id="nu-email" class="form-control"
+                        style="width: 100%; padding: 10px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; color: #0f172a;"
+                        required placeholder="e.g. john@example.com">
+                </div>
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label
+                        style="color: var(--text-sub); display: block; margin-bottom: 5px; font-weight: 600;">Password</label>
+                    <div style="position: relative; display: flex; align-items: center;">
+                        <input type="password" id="nu-pass" class="form-control"
+                            style="width: 100%; padding: 10px; padding-right: 42px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; color: #0f172a;"
+                            required placeholder="••••••••">
+                        <button type="button" onclick="togglePasswordVisibility('nu-pass', this)" title="Toggle password visibility" style="position: absolute; right: 12px; background: transparent; border: none; cursor: pointer; color: #64748b; font-size: 1.05rem; padding: 4px; display: flex; align-items: center; justify-content: center; z-index: 10;">
+                            <i class="fa-solid fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label
+                        style="color: var(--text-sub); display: block; margin-bottom: 5px; font-weight: 600;">Role</label>
+                    <select id="nu-role" class="form-control"
+                        style="width: 100%; padding: 10px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; color: #0f172a;">
+                        <option value="user" selected>Student / User</option>
+                        <option value="admin">System Admin</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label
+                        style="color: #334155; display: inline-flex; align-items: center; gap: 8px; font-weight: 600; cursor: pointer;">
+                        <input type="checkbox" id="nu-sub" style="width: 18px; height: 18px; accent-color: #4f46e5;">
+                        Grant Premium Access Immediately
+                    </label>
+                </div>
+                <button type="submit" class="btn-sm btn-sub"
+                    style="width: 100%; padding: 12px; justify-content: center; font-size: 1rem;"><i
+                        class="fa-solid fa-user-check"></i> Provision Account</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="/learning_static/js/api.js"></script>
+    <script>
+        function togglePasswordVisibility(inputId, btn) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            const icon = btn.querySelector('i');
+            if (input.type === 'password') {
+                input.type = 'text';
+                if (icon) {
+                    icon.className = 'fa-solid fa-eye-slash';
+                    icon.style.color = '#2563eb';
+                }
+            } else {
+                input.type = 'password';
+                if (icon) {
+                    icon.className = 'fa-solid fa-eye';
+                    icon.style.color = '#64748b';
+                }
+            }
+        }
+
+        let globalDashboardData = {};
+
+        function switchTab(tabId, btn) {
+            // Hide all tab content panes
+            document.querySelectorAll('.tab-content').forEach(el => {
+                el.classList.remove('active');
+                el.style.display = 'none';
+            });
+            // Remove active style from all tab buttons
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+
+            // Show selected tab
+            const target = document.getElementById(tabId);
+            if (target) {
+                target.classList.add('active');
+                target.style.display = 'block';
+            }
+
+            // Set button to active state
+            if (btn && btn.classList) {
+                btn.classList.add('active');
+            } else if (btn) {
+                const parentBtn = btn.closest('.tab-btn');
+                if (parentBtn) parentBtn.classList.add('active');
+            }
+
+            // Refresh tab specific content if needed
+            if (tabId === 'tab-courses') {
+                loadCoursesList();
+            }
+        }
+
+        function showAlert(msg, isError = false) {
+            const a = document.getElementById('admin-alert');
+            a.textContent = msg;
+            a.style.background = isError ? '#fef2f2' : '#ecfdf5';
+            a.style.color = isError ? '#dc2626' : '#047857';
+            a.style.border = isError ? '1px solid #fca5a5' : '1px solid #a7f3d0';
+            a.style.display = 'block';
+            a.classList.remove('hidden');
+            setTimeout(() => {
+                a.style.display = 'none';
+                a.classList.add('hidden');
+            }, 5000);
+        }
+
+        async function loadDashboardData() {
+            try {
+                const token = localStorage.getItem('access_token');
+                const headers = token ? { 'Authorization': 'Bearer ' + token } : {};
+                const res = await fetch('/admin/dashboard_data', { headers: headers });
+                const data = await res.json();
+                if (data.error) return showAlert(data.error, true);
+
+                globalDashboardData = data;
+
+                // Update Stat Cards
+                if (data.stats) {
+                    document.getElementById('stat-users').innerText = data.stats.total_users || 0;
+                    document.getElementById('stat-certificates').innerText = data.stats.total_certificates || 0;
+                    document.getElementById('stat-resumes').innerText = data.stats.total_resumes || 0;
+                    document.getElementById('stat-views').innerText = data.stats.total_views || 0;
+                    if (document.getElementById('stat-revenue')) {
+                        document.getElementById('stat-revenue').innerText = data.stats.formatted_revenue || ('₹' + (data.stats.total_revenue || 0));
+                    }
+                }
+
+                renderUsers(data.users);
+                renderCertificates(data.certificates);
+                renderHistory(data.views);
+                renderLogs(data.logs);
+                loadCoursesList();
+
+            } catch (e) {
+                console.error(e);
+                showAlert("Failed to connect to admin endpoints", true);
+            }
+        }
+
+        function formatLessonDisplayName(title, index) {
+            let cleanTitle = (title || `Lesson ${index + 1}`).trim();
+            // If title has a leading "Lesson X[:\-–] " or "ID #X", strip it so we can re-number cleanly per course
+            const match = cleanTitle.match(/^(?:Lesson\s*\d+|ID\s*#\d+)\s*[:\-–]?\s*(.*)$/i);
+            if (match && match[1] && match[1].trim()) {
+                cleanTitle = match[1].trim();
+            }
+            return `Lesson ${index + 1}: ${cleanTitle}`;
+        }
+
+        async function loadCoursesList() {
+            try {
+                const token = localStorage.getItem('access_token');
+                const headers = token ? { 'Authorization': 'Bearer ' + token } : {};
+                const res = await fetch('/admin/courses', { headers: headers });
+                const data = await res.json();
+                const container = document.getElementById('courses-grid-container');
+                container.innerHTML = '';
+
+                const courses = data.courses || [];
+                populateCourseDropdown(courses);
+
+                if (courses.length === 0) {
+                    container.innerHTML = '<p style="color: var(--text-sub); text-align:center; padding: 20px;">No courses created yet.</p>';
+                    return;
+                }
+
+                courses.forEach(c => {
+                    const card = document.createElement('div');
+                    card.className = 'course-admin-card';
+                    const firstLessonId = c.first_lesson_id || c.id;
+                    const hasVideo = c.lessons && c.lessons.some(l => l.has_video);
+
+                    // Build lessons list HTML
+                    let lessonsHtml = '';
+                    if (c.lessons && c.lessons.length > 0) {
+                        lessonsHtml = c.lessons.map((l, idx) => {
+                            const displayName = formatLessonDisplayName(l.lesson_title, idx);
+                            const safeTitle = (l.lesson_title || displayName).replace(/'/g, "\\'").replace(/"/g, "&quot;");
+                            return `
+                                <div style="display:flex; justify-content:space-between; align-items:center; padding: 7px 10px; background: ${l.has_video ? '#ecfdf5' : '#f8fafc'}; border-radius: 8px; margin-bottom: 6px; border: 1px solid ${l.has_video ? '#6ee7b7' : '#e2e8f0'}; gap: 8px;">
+                                    <div style="flex: 1; min-width: 0;">
+                                        <div style="font-size: 0.82rem; color: #1e293b; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${displayName}">
+                                            ${displayName}
+                                        </div>
+                                        <div style="display:flex; gap: 4px; margin-top: 3px; align-items: center;">
+                                            <span style="font-size: 0.65rem; padding: 1px 6px; border-radius: 4px; font-weight: 700; background: ${l.has_video ? '#d1fae5' : '#f1f5f9'}; color: ${l.has_video ? '#059669' : '#94a3b8'};">${l.has_video ? '🎬 Video' : 'No vid'}</span>
+                                            <span style="font-size: 0.65rem; padding: 1px 6px; border-radius: 4px; font-weight: 700; background: ${l.has_notes ? '#fce7f3' : '#f1f5f9'}; color: ${l.has_notes ? '#be185d' : '#94a3b8'};">${l.has_notes ? '📄 PDF' : 'No PDF'}</span>
+                                        </div>
+                                    </div>
+                                    <div style="display:flex; gap: 4px; align-items:center; flex-shrink: 0;">
+                                        <button onclick="selectLessonForUpload(${l.lesson_id}, '${safeTitle}', ${c.id})" title="Upload Video or Notes for this lesson" style="font-size: 0.7rem; padding: 3px 7px; background: #4f46e5; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 3px;">
+                                            <i class="fa-solid fa-cloud-arrow-up"></i> Select
+                                        </button>
+                                        <button onclick="renameLessonPrompt(${l.lesson_id}, '${safeTitle}')" title="Rename lesson title" style="font-size: 0.7rem; padding: 3px 7px; background: #e0e7ff; color: #3730a3; border: 1px solid #c7d2fe; border-radius: 5px; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 3px;">
+                                            <i class="fa-solid fa-pen"></i> Edit
+                                        </button>
+                                        <button onclick="deleteLessonPrompt(${l.lesson_id}, '${safeTitle}')" title="Delete this lesson" style="font-size: 0.7rem; padding: 3px 7px; background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; border-radius: 5px; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 3px;">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('');
+                    } else {
+                        lessonsHtml = `<div style="font-size: 0.78rem; color: #94a3b8; padding: 4px;">No lessons yet</div>`;
+                    }
+
+                    card.innerHTML = `
+                        <div>
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
+                                <span class="badge badge-purple">${c.difficulty_level || 'Intermediate'}</span>
+                                <small style="color: var(--text-sub); font-weight: 700;">Course ID #${c.id}</small>
+                            </div>
+                            <div class="course-admin-title">${c.title}</div>
+                            <div class="course-admin-desc">${c.description || 'Interactive hands-on course blueprint.'}</div>
+                            <div style="margin-top: 10px; border-top: 1px solid #e2e8f0; padding-top: 8px;">
+                                <div style="font-size: 0.75rem; font-weight: 700; color: #475569; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Lessons (${(c.lessons || []).length})</div>
+                                ${lessonsHtml}
+                            </div>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top: 15px; padding-top: 10px; border-top: 1px solid var(--border-glass); gap: 6px;">
+                            <button class="btn-sm btn-sub" onclick="startAddLessonToCourse(${c.id}, '${(c.title || '').replace(/'/g, "\\'")}', ${(c.lessons || []).length})" style="background: #eef2ff; color: #4338ca; border: 1.5px solid #c7d2fe; padding: 6px 12px; font-weight: 700; cursor: pointer; border-radius: 8px;">
+                                <i class="fa-solid fa-plus"></i> Add Lesson
+                            </button>
+                            <a href="/learning/player?course_id=${c.id}&lesson_id=${firstLessonId}&title=${encodeURIComponent(c.title)}" target="_blank" class="btn-sm btn-action" style="text-decoration:none;"><i class="fa-solid fa-play"></i> Preview</a>
+                            <button class="btn-sm btn-danger" onclick="deleteCourse(${c.id}, '${(c.title || '').replace(/'/g, "\\'")}')"><i class="fa-solid fa-trash"></i> Delete</button>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+            } catch (e) {
+                console.error("Courses list load error:", e);
+            }
+        }
+
+        async function deleteCourse(courseId, title) {
+            if (!confirm(`Are you sure you want to delete course ID #${courseId}: "${title}"?`)) return;
+            try {
+                const token = localStorage.getItem('access_token');
+                const headers = { 'Content-Type': 'application/json' };
+                if (token) headers['Authorization'] = 'Bearer ' + token;
+                const res = await fetch('/admin/delete_course', {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify({ course_id: parseInt(courseId) })
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    showAlert(data.message);
+                    loadCoursesList();
+                } else {
+                    showAlert(data.detail || "Failed to delete course", true);
+                }
+            } catch (e) {
+                showAlert(e.message, true);
+            }
+        }
+
+        function renderUsers(users) {
+            const tbody = document.getElementById('users-table-body');
+            tbody.innerHTML = '';
+            if (!users || users.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 20px; color: var(--text-sub);">No users registered yet.</td></tr>';
+                return;
+            }
+            users.forEach(u => {
+                const tr = document.createElement('tr');
+                const isAdmin = u.role.toLowerCase() === 'admin';
+                const roleBadge = isAdmin ? '<span class="badge badge-admin">ADMIN</span>' : '<span class="badge badge-user">STUDENT</span>';
+                
+                const pkg = u.package_details || {};
+                let packageHTML = '';
+                if (u.is_subscribed) {
+                    const couponBadge = pkg.coupon_code ? `<small style="display:block; color: #4338ca; font-weight: 700; margin-top: 2px;"><i class="fa-solid fa-tag"></i> Coupon: ${pkg.coupon_code}</small>` : '';
+                    packageHTML = `
+                        <div>
+                            <span class="badge badge-premium" style="display:inline-block; margin-bottom: 2px;">${pkg.plan_name || 'Pro Membership'} (${pkg.formatted_amount || 'Active'})</span>
+                            ${couponBadge}
+                            <small style="display:block; color: #64748b; font-size: 0.75rem; margin-top: 2px;">Method: ${pkg.payment_method || 'Gateway'}</small>
+                        </div>
+                    `;
+                } else {
+                    packageHTML = '<span class="badge badge-free">Free Tier</span>';
+                }
+
+                tr.innerHTML = `
+                    <td>#${u.id}</td>
+                    <td style="font-weight: 700; color: #0f172a;">${u.full_name || 'User'}</td>
+                    <td style="color: #4338ca; font-weight: 600;">${u.email}</td>
+                    <td>${roleBadge}</td>
+                    <td>${packageHTML}</td>
+                    <td>
+                        <small style="color: var(--text-sub);">
+                            📄 Resumes: ${u.resumes_count || 0} | 🎓 Certs: ${u.certificates_count || 0} | 👁️ Views: ${u.views_count || 0}
+                        </small>
+                    </td>
+                    <td>
+                        <div style="display:flex; gap: 6px; flex-wrap: wrap;">
+                            <button class="btn-sm btn-action" onclick="viewResumes('${u.email}', '${(u.full_name || 'User').replace(/'/g, "\\'")}')">Resumes</button>
+                            <button class="btn-sm btn-sub" onclick="toggleUserRole('${u.email}', '${u.role}')">${isAdmin ? 'Demote' : 'Make Admin'}</button>
+                            <button class="btn-sm btn-sub" onclick="toggleUserSubscription('${u.email}', ${!u.is_subscribed})">${u.is_subscribed ? 'Revoke Sub' : 'Grant Sub'}</button>
+                            <button class="btn-sm btn-danger" onclick="deleteUser('${u.email}')"><i class="fa-solid fa-trash"></i> Delete</button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderCertificates(certs) {
+            const tbody = document.getElementById('certs-table-body');
+            tbody.innerHTML = '';
+            const validCerts = (certs || []).filter(c => (c.score || 0) >= 25);
+            if (!validCerts || validCerts.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 20px; color: var(--text-sub);">No certificates generated yet (Minimum 25% passing score required).</td></tr>';
+                return;
+            }
+            validCerts.forEach(c => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="font-family: monospace; color: #4338ca; font-weight: 700;">TP-CERT-${c.cert_uuid}</td>
+                    <td style="font-weight: 700; color: #0f172a;">${c.user_name}</td>
+                    <td style="color: #475569;">${c.user_email}</td>
+                    <td style="color: #047857; font-weight: 600;">${c.title}</td>
+                    <td><span class="badge badge-premium">${c.score}% Passed</span></td>
+                    <td style="color: var(--text-sub);">${c.issued_at || 'Recent'}</td>
+                    <td>
+                        <a href="${c.certificate_url}" target="_blank" class="btn-sm btn-action" style="text-decoration:none;"><i class="fa-solid fa-arrow-up-right-from-square"></i> View / Print</a>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderHistory(views) {
+            const tbody = document.getElementById('history-table-body');
+            tbody.innerHTML = '';
+            if (!views || views.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 20px; color: var(--text-sub);">No viewed history recorded.</td></tr>';
+                return;
+            }
+            views.forEach(v => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="color: #4338ca; font-weight: 600;">${v.user_email}</td>
+                    <td><span class="badge badge-user">${v.item_type}</span></td>
+                    <td style="font-weight: 600; color: #0f172a;">${v.item_title}</td>
+                    <td style="color: var(--text-sub); font-size: 0.8rem;">${v.timestamp}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderLogs(logs) {
+            const ul = document.getElementById('logs-list');
+            ul.innerHTML = '';
+            if (!logs || logs.length === 0) {
+                ul.innerHTML = '<li style="color: var(--text-sub);">No audit logs available.</li>';
+                return;
+            }
+            logs.forEach(l => {
+                const li = document.createElement('li');
+                li.style.padding = "6px 0";
+                li.style.borderBottom = "1px solid #e2e8f0";
+                li.innerHTML = `<span style="color: #64748b;">[${l.timestamp}]</span> - <span style="color: #4338ca; font-weight:600;">${l.user_email}</span>: <span style="color: #047857; font-weight:600;">${l.action}</span>`;
+                ul.appendChild(li);
+            });
+        }
+
+        function openCreateUserModal() {
+            document.getElementById('createUserModal').style.display = 'flex';
+        }
+
+        document.getElementById('create-user-modal-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button');
+            btn.innerHTML = 'Provisioning Account...';
+            try {
+                const token = localStorage.getItem('access_token');
+                const headers = { 'Content-Type': 'application/json' };
+                if (token) headers['Authorization'] = 'Bearer ' + token;
+
+                const payload = {
+                    full_name: document.getElementById('nu-name').value.trim(),
+                    email: document.getElementById('nu-email').value.trim(),
+                    password: document.getElementById('nu-pass').value.trim(),
+                    role: document.getElementById('nu-role').value,
+                    is_subscribed: document.getElementById('nu-sub').checked
+                };
+
+                const res = await fetch('/admin/create_user', {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    showAlert(data.message);
+                    document.getElementById('createUserModal').style.display = 'none';
+                    e.target.reset();
+                    loadDashboardData();
+                } else {
+                    showAlert(data.detail || "Failed to create user", true);
+                }
+            } catch (err) {
+                showAlert(err.message, true);
+            } finally {
+                btn.innerHTML = '<i class="fa-solid fa-user-check"></i> Provision Account';
+            }
+        });
+
+        async function deleteUser(email) {
+            if (!confirm(`Are you sure you want to permanently DELETE user account: ${email}? This will remove all associated user history, certificates, and resumes!`)) return;
+            try {
+                const token = localStorage.getItem('access_token');
+                const headers = { 'Content-Type': 'application/json' };
+                if (token) headers['Authorization'] = 'Bearer ' + token;
+                const res = await fetch('/admin/delete_user', {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify({ email: email })
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    showAlert(data.message);
+                    loadDashboardData();
+                } else {
+                    showAlert(data.detail || "Failed to delete user", true);
+                }
+            } catch (e) {
+                showAlert(e.message, true);
+            }
+        }
+
+        async function toggleUserRole(email, currentRole) {
+            const newRole = currentRole.toLowerCase() === 'admin' ? 'user' : 'admin';
+            try {
+                const token = localStorage.getItem('access_token');
+                const headers = { 'Content-Type': 'application/json' };
+                if (token) headers['Authorization'] = 'Bearer ' + token;
+                const res = await fetch('/admin/update_role', {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify({ email: email, role: newRole })
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    showAlert(data.message);
+                    loadDashboardData();
+                } else {
+                    showAlert(data.detail || "Failed to update role", true);
+                }
+            } catch (e) {
+                showAlert(e.message, true);
+            }
+        }
+
+        async function toggleUserSubscription(email, nextStatus) {
+            try {
+                const token = localStorage.getItem('access_token');
+                const headers = { 'Content-Type': 'application/json' };
+                if (token) headers['Authorization'] = 'Bearer ' + token;
+                const res = await fetch('/admin/update_subscription', {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify({ email: email, is_subscribed: nextStatus })
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    showAlert(data.message);
+                    loadDashboardData();
+                } else {
+                    showAlert(data.detail || "Failed to update subscription", true);
+                }
+            } catch (e) {
+                showAlert(e.message, true);
+            }
+        }
+
+        function viewResumes(email, name) {
+            document.getElementById('modal-user-name').innerText = `Resumes for ${name}`;
+            const content = document.getElementById('modal-resumes-content');
+            content.innerHTML = '';
+
+            const resumes = (globalDashboardData.resumes && globalDashboardData.resumes[email.toLowerCase()]) || [];
+            if (resumes.length === 0) {
+                content.innerHTML = '<p style="color: var(--text-sub);">No resumes uploaded by this user.</p>';
+            } else {
+                resumes.forEach(r => {
+                    const div = document.createElement('div');
+                    div.style.background = '#f8fafc';
+                    div.style.padding = '16px';
+                    div.style.borderRadius = '12px';
+                    div.style.border = '1px solid #e2e8f0';
+                    div.style.marginBottom = '12px';
+                    div.innerHTML = `
+                        <h4 style="margin: 0 0 10px 0; color: #4338ca; font-size: 1.05rem;"><i class="fa-solid fa-file-pdf"></i> ${r.filename}</h4>
+                        <div style="display: flex; gap: 20px; margin-bottom: 10px;">
+                            <div><strong>Match Score:</strong> <span style="color: #047857; font-weight: 700;">${r.score || 0}%</span></div>
+                        </div>
+                        <div><strong>Missing Skills:</strong> <span style="color: #dc2626;">${r.missing_skills || 'None'}</span></div>
+                    `;
+                    content.appendChild(div);
+                });
+            }
+            document.getElementById('resumesModal').style.display = 'flex';
+        }
+
+        function filterUsers() {
+            const q = document.getElementById('user-search').value.toLowerCase();
+            const filtered = (globalDashboardData.users || []).filter(u =>
+                (u.full_name && u.full_name.toLowerCase().includes(q)) ||
+                (u.email && u.email.toLowerCase().includes(q))
+            );
+            renderUsers(filtered);
+        }
+
+        function filterCertificates() {
+            const q = document.getElementById('cert-search').value.toLowerCase();
+            const filtered = (globalDashboardData.certificates || []).filter(c =>
+                (c.user_name && c.user_name.toLowerCase().includes(q)) ||
+                (c.user_email && c.user_email.toLowerCase().includes(q)) ||
+                (c.title && c.title.toLowerCase().includes(q))
+            );
+            renderCertificates(filtered);
+        }
+
+        function filterHistory() {
+            const q = document.getElementById('history-search').value.toLowerCase();
+            const filtered = (globalDashboardData.views || []).filter(v =>
+                (v.user_email && v.user_email.toLowerCase().includes(q)) ||
+                (v.item_title && v.item_title.toLowerCase().includes(q))
+            );
+            renderHistory(filtered);
+        }
+
+        document.getElementById('create-course-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button');
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Creating Course...';
+            try {
+                const token = localStorage.getItem('access_token');
+                const headers = { 'Content-Type': 'application/json' };
+                if (token) headers['Authorization'] = 'Bearer ' + token;
+
+                const payload = {
+                    category_id: parseInt(document.getElementById('c-cat-id').value) || 1,
+                    title: document.getElementById('c-title').value.trim(),
+                    description: document.getElementById('c-desc').value.trim(),
+                    language: 'English',
+                    difficulty_level: document.getElementById('c-diff').value
+                };
+
+                const res = await fetch('/admin/create_course', {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    showAlert(data.message);
+                    e.target.reset();
+                    await loadCoursesList();
+                    if (data.course_id) {
+                        const courseSelect = document.getElementById('u-course-id');
+                        if (courseSelect) {
+                            courseSelect.value = data.course_id;
+                            onAdminCourseChange();
+                        }
+                    }
+                    if (data.lesson_id) {
+                        const toggle = document.getElementById('u-create-new-toggle');
+                        if (toggle) toggle.checked = false;
+                        toggleNewLessonMode();
+                        const targetInput = document.getElementById('u-lesson-id');
+                        if (targetInput) targetInput.value = data.lesson_id;
+                        loadSelectedLessonMediaAdmin();
+                    }
+                    const uploadSection = document.getElementById('upload-media-form');
+                    if (uploadSection) uploadSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                } else {
+                    showAlert(data.detail || "Failed to create course", true);
+                }
+            } catch (err) {
+                showAlert(err.message, true);
+            } finally {
+                btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Create Course';
+            }
+        });
+
+        let cachedAdminCourses = [];
+
+        function populateCourseDropdown(courses) {
+            cachedAdminCourses = courses || [];
+            const courseSelect = document.getElementById('u-course-id');
+            if (!courseSelect) return;
+            const currentSelected = courseSelect.value;
+            if (!courses || courses.length === 0) {
+                courseSelect.innerHTML = '<option value="">-- No courses available --</option>';
+                courseSelect.value = '';
+                onAdminCourseChange();
+                return;
+            }
+            courseSelect.innerHTML = '<option value="">-- Choose Target Course --</option>';
+            courses.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.id;
+                opt.textContent = `[Course #${c.id}] ${c.title} (${(c.lessons || []).length} lessons)`;
+                courseSelect.appendChild(opt);
+            });
+            if (currentSelected && courses.some(c => c.id == currentSelected)) {
+                courseSelect.value = currentSelected;
+            } else if (courses.length > 0) {
+                courseSelect.value = courses[0].id;
+            } else {
+                courseSelect.value = '';
+            }
+            onAdminCourseChange();
+        }
+
+        function onAdminCourseChange() {
+            const courseId = parseInt(document.getElementById('u-course-id')?.value);
+            const lessonSelect = document.getElementById('u-lesson-id');
+            if (!lessonSelect) return;
+            lessonSelect.innerHTML = '';
+
+            const selectedCourse = cachedAdminCourses.find(c => c.id === courseId);
+            if (selectedCourse && selectedCourse.lessons && selectedCourse.lessons.length > 0) {
+                selectedCourse.lessons.forEach((l, idx) => {
+                    const displayName = formatLessonDisplayName(l.lesson_title, idx);
+                    const opt = document.createElement('option');
+                    opt.value = l.lesson_id;
+                    opt.textContent = `${displayName} ${l.has_video ? '(🎬 Video)' : '(No video)'}`;
+                    lessonSelect.appendChild(opt);
+                });
+                lessonSelect.value = selectedCourse.lessons[0].lesson_id;
+            } else {
+                lessonSelect.innerHTML = '<option value="">No existing lessons</option>';
+                lessonSelect.value = '';
+            }
+            loadSelectedLessonMediaAdmin();
+        }
+
+        function toggleNewLessonMode() {
+            const isNew = document.getElementById('u-create-new-toggle')?.checked;
+            const existingGroup = document.getElementById('u-existing-lesson-group');
+            const newGroup = document.getElementById('u-new-lesson-group');
+            if (isNew) {
+                if (existingGroup) existingGroup.style.display = 'none';
+                if (newGroup) newGroup.style.display = 'block';
+                const courseId = parseInt(document.getElementById('u-course-id')?.value);
+                const selectedCourse = cachedAdminCourses.find(c => c.id === courseId);
+                const nextNum = (selectedCourse?.lessons?.length || 0) + 1;
+                const titleInput = document.getElementById('u-lesson-title');
+                if (titleInput && !titleInput.value) {
+                    titleInput.value = `Lesson ${nextNum}: ${(selectedCourse?.title || 'Core')} Concepts`;
+                }
+            } else {
+                if (existingGroup) existingGroup.style.display = 'block';
+                if (newGroup) newGroup.style.display = 'none';
+                loadSelectedLessonMediaAdmin();
+            }
+        }
+
+        // Action from Course Card: "Select" on a specific lesson
+        function selectLessonForUpload(lessonId, lessonTitle, courseId = null) {
+            if (courseId) {
+                const courseSelect = document.getElementById('u-course-id');
+                if (courseSelect) {
+                    courseSelect.value = courseId;
+                    onAdminCourseChange();
+                }
+            }
+            const toggle = document.getElementById('u-create-new-toggle');
+            if (toggle) toggle.checked = false;
+            toggleNewLessonMode();
+
+            const lessonSelect = document.getElementById('u-lesson-id');
+            if (lessonSelect) {
+                lessonSelect.value = lessonId;
+            }
+            loadSelectedLessonMediaAdmin();
+
+            const uploadSection = document.getElementById('upload-media-form');
+            if (uploadSection) uploadSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            showAlert(`Selected ${lessonTitle || 'Lesson'} for media update.`);
+        }
+
+        // Action from Course Card: "Edit" on a specific lesson
+        async function renameLessonPrompt(lessonId, currentTitle) {
+            const newTitle = prompt(`Enter new title for Lesson:`, currentTitle || '');
+            if (newTitle === null) return;
+            const trimmed = newTitle.trim();
+            if (!trimmed) {
+                alert("Lesson title cannot be empty.");
+                return;
+            }
+            try {
+                const token = localStorage.getItem('access_token');
+                const headers = { 'Content-Type': 'application/json' };
+                if (token) headers['Authorization'] = 'Bearer ' + token;
+                const res = await fetch('/admin/update_lesson', {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify({ lesson_id: parseInt(lessonId), title: trimmed })
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    showAlert(data.message || "Lesson updated successfully.");
+                    await loadCoursesList();
+                    loadSelectedLessonMediaAdmin();
+                } else {
+                    showAlert(data.detail || "Failed to update lesson", true);
+                }
+            } catch (e) {
+                showAlert(e.message, true);
+            }
+        }
+
+        // Action from Course Card: "Delete" on a specific lesson
+        async function deleteLessonPrompt(lessonId, lessonTitle) {
+            if (!confirm(`Are you sure you want to permanently delete "${lessonTitle}"? This will remove its video and notes.`)) return;
+            try {
+                const token = localStorage.getItem('access_token');
+                const headers = { 'Content-Type': 'application/json' };
+                if (token) headers['Authorization'] = 'Bearer ' + token;
+                const res = await fetch('/admin/delete_lesson', {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify({ lesson_id: parseInt(lessonId) })
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    showAlert(data.message || "Lesson deleted successfully.");
+                    await loadCoursesList();
+                    loadSelectedLessonMediaAdmin();
+                } else {
+                    showAlert(data.detail || "Failed to delete lesson", true);
+                }
+            } catch (e) {
+                showAlert(e.message, true);
+            }
+        }
+
+        // Action from Course Card: "+ Add Lesson" button
+        function startAddLessonToCourse(courseId, courseTitle, lessonCount) {
+            // 1. Select the course in dropdown
+            const courseSelect = document.getElementById('u-course-id');
+            if (courseSelect) {
+                courseSelect.value = courseId;
+                onAdminCourseChange();
+            }
+            // 2. Turn on "+ Create New Lesson" mode
+            const toggle = document.getElementById('u-create-new-toggle');
+            if (toggle) toggle.checked = true;
+            toggleNewLessonMode();
+
+            // 3. Pre-fill sensible lesson title
+            const nextIndex = lessonCount + 1;
+            const titleInput = document.getElementById('u-lesson-title');
+            if (titleInput) {
+                titleInput.value = `Lesson ${nextIndex}: ${courseTitle} Advanced Part ${nextIndex}`;
+                titleInput.focus();
+            }
+
+            // 4. Scroll to upload form
+            const uploadSection = document.getElementById('upload-media-form');
+            if (uploadSection) uploadSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            showAlert(`Ready to add Lesson #${nextIndex} to Course #${courseId} ("${courseTitle}"). Choose video & notes below.`);
+        }
+
+        document.getElementById('upload-media-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button');
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Uploading & Indexing...';
+            
+            const isCreatingNew = document.getElementById('u-create-new-toggle')?.checked;
+            const courseId = document.getElementById('u-course-id')?.value;
+            const lessonId = document.getElementById('u-lesson-id')?.value;
+            const lessonTitle = document.getElementById('u-lesson-title')?.value;
+
+            try {
+                const token = localStorage.getItem('access_token');
+                const formData = new FormData();
+                const reqPlan = document.getElementById('u-required-plan')?.value;
+                if (courseId) formData.append('course_id', courseId);
+                if (lessonId && !isCreatingNew) formData.append('lesson_id', lessonId);
+                if (isCreatingNew) formData.append('create_new_lesson', 'true');
+                if (lessonTitle) formData.append('lesson_title', lessonTitle);
+                if (reqPlan) formData.append('required_plan', reqPlan);
+
+                const videoFile = document.getElementById('u-video').files[0];
+                const notesFile = document.getElementById('u-notes').files[0];
+                if (videoFile) formData.append('video', videoFile);
+                if (notesFile) formData.append('notes', notesFile);
+
+                const headers = {};
+                if (token) headers['Authorization'] = 'Bearer ' + token;
+
+                const res = await fetch('/admin/upload_lesson_media', {
+                    method: 'POST',
+                    headers: headers,
+                    body: formData
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    showAlert(data.message);
+                    // Reset file inputs
+                    document.getElementById('u-video').value = '';
+                    document.getElementById('u-notes').value = '';
+                    // If created new lesson, switch back to existing mode with the new lesson selected
+                    if (isCreatingNew) {
+                        const toggle = document.getElementById('u-create-new-toggle');
+                        if (toggle) toggle.checked = false;
+                        toggleNewLessonMode();
+                    }
+                    // Refresh courses catalog and preview
+                    await loadCoursesList();
+                    if (data.lesson_id) {
+                        const lSelect = document.getElementById('u-lesson-id');
+                        if (lSelect) lSelect.value = data.lesson_id;
+                    }
+                    setTimeout(() => loadSelectedLessonMediaAdmin(), 400);
+                } else {
+                    showAlert(data.detail || "Failed to upload media", true);
+                }
+            } catch (err) {
+                showAlert(err.message, true);
+            } finally {
+                btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Upload & Save Lesson Media';
+            }
+        });
+
+        async function loadSelectedLessonMediaAdmin() {
+            const lessonId = document.getElementById('u-lesson-id')?.value;
+            const isNew = document.getElementById('u-create-new-toggle')?.checked;
+            const mediaCard = document.getElementById('admin-current-media-card');
+            const titleEl = document.getElementById('admin-cur-lesson-title');
+            const videoBox = document.getElementById('admin-video-box');
+            const notesBox = document.getElementById('admin-notes-box');
+            const vPlayer = document.getElementById('admin-cur-video-player');
+
+            if (isNew || !lessonId) {
+                if (mediaCard) mediaCard.style.display = 'none';
+                if (vPlayer) { vPlayer.pause(); vPlayer.removeAttribute('src'); vPlayer.load(); }
+                return;
+            }
+
+            try {
+                const cacheBust = Date.now();
+                const res = await fetch(`/api/lessons/${lessonId}/media?_cb=${cacheBust}`);
+                if (!res.ok) {
+                    if (mediaCard) mediaCard.style.display = 'none';
+                    if (vPlayer) { vPlayer.pause(); vPlayer.removeAttribute('src'); vPlayer.load(); }
+                    return;
+                }
+                const data = await res.json();
+                
+                const hasVideo = !!data.video_url;
+                const hasNotes = !!data.notes_url;
+
+                // Only show preview if the lesson actually has attached video or notes
+                if (!hasVideo && !hasNotes) {
+                    if (mediaCard) mediaCard.style.display = 'none';
+                    if (vPlayer) { vPlayer.pause(); vPlayer.removeAttribute('src'); vPlayer.load(); }
+                    return;
+                }
+
+                if (mediaCard) mediaCard.style.display = 'block';
+                if (titleEl) titleEl.innerText = data.title || `Lesson #${lessonId}`;
+
+                if (hasVideo) {
+                    const vLink = document.getElementById('admin-cur-video-link');
+                    if (vLink) { vLink.innerText = data.video_url; vLink.href = data.video_url; }
+                    if (vPlayer) {
+                        const cbUrl = data.video_url + (data.video_url.includes('?') ? '&' : '?') + '_cb=' + cacheBust;
+                        vPlayer.src = cbUrl;
+                        vPlayer.load();
+                    }
+                    const vView = document.getElementById('admin-cur-video-view');
+                    if (vView) { vView.href = data.video_url; }
+                    const vDl = document.getElementById('admin-cur-video-download');
+                    if (vDl) { vDl.href = data.video_url; }
+                    const previewBtn = document.getElementById('admin-preview-student-btn');
+                    if (previewBtn) previewBtn.href = `/learning/player?lesson_id=${lessonId}&title=${encodeURIComponent(data.title || 'Lesson ' + lessonId)}`;
+                    if (videoBox) videoBox.style.display = 'block';
+                } else {
+                    if (videoBox) videoBox.style.display = 'none';
+                    if (vPlayer) { vPlayer.pause(); vPlayer.removeAttribute('src'); vPlayer.load(); }
+                }
+
+                if (hasNotes) {
+                    const notesNameEl = document.getElementById('admin-cur-notes-name');
+                    if (notesNameEl) notesNameEl.innerText = data.notes_name || "Uploaded PDF";
+                    const notesDl = document.getElementById('admin-cur-notes-download');
+                    if (notesDl) notesDl.href = data.notes_url;
+                    const notesView = document.getElementById('admin-cur-notes-view');
+                    if (notesView) notesView.href = data.notes_url;
+                    if (notesBox) notesBox.style.display = 'block';
+                } else {
+                    if (notesBox) notesBox.style.display = 'none';
+                }
+            } catch (err) {
+                console.warn("Failed to load lesson media:", err);
+                if (mediaCard) mediaCard.style.display = 'none';
+                if (vPlayer) { vPlayer.pause(); vPlayer.removeAttribute('src'); vPlayer.load(); }
+            }
+        }
+
+        loadDashboardData();
+        loadCoursesList();
+    </script>
+</body>
+
+</html>

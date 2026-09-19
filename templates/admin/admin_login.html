@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - AI Resume Analyzer Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container" style="max-width: 500px; margin-top: 6vh; padding: 0 16px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <a href="/" class="btn-home-nav">
+                <i class="fa-solid fa-house"></i> Home
+            </a>
+            <a href="/login" style="color: #000000; font-weight: 800; font-size: 0.9rem; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+                <i class="fa-solid fa-user"></i> User Login
+            </a>
+        </div>
+
+        <header class="app-header small-header" style="margin-bottom: 2rem;">
+            <h1 style="color: #000000; font-weight: 800; font-size: 2.2rem; letter-spacing: -0.5px;">
+                <i class="fa-solid fa-shield-halved" style="color: #0f172a;"></i> Executive Admin Portal
+            </h1>
+            <p style="color: #0f172a; font-weight: 600; font-size: 1rem; margin-top: 6px;">
+                Enter administrative account credentials to manage system state.
+            </p>
+        </header>
+
+        <main class="dashboard" style="grid-template-columns: 1fr;">
+            <section class="card glass-panel w-full" style="border: 2px solid #0f172a; border-top: 6px solid #0f172a; box-shadow: 0 15px 35px rgba(0,0,0,0.12); padding: 2rem;">
+                {% if error %}
+                <div class="tag missing" style="margin-bottom: 1.25rem; text-align: center; background: #fee2e2; color: #991b1b; font-weight: 700; padding: 10px; border-radius: 8px; border: 1px solid #fecaca;">
+                    <i class="fa-solid fa-circle-exclamation"></i> {{ error }}
+                </div>
+                {% endif %}
+                <form action="/admin-login" method="POST" class="modern-form">
+                    <div class="input-group">
+                        <label>Admin Email</label>
+                        <input type="email" name="email" class="modern-input" placeholder="admin@domain.com" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Admin Password</label>
+                        <div style="position: relative; display: flex; align-items: center;">
+                            <input type="password" id="adminPasswordInput" name="password" class="modern-input" placeholder="••••••••" required style="width: 100%; padding-right: 42px;">
+                            <button type="button" onclick="togglePasswordVisibility('adminPasswordInput', this)" title="Toggle password visibility" style="position: absolute; right: 12px; background: transparent; border: none; cursor: pointer; color: #64748b; font-size: 1.1rem; padding: 4px; display: flex; align-items: center; justify-content: center; z-index: 10;">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-dark-admin-submit glow-btn">
+                        <i class="fa-solid fa-lock"></i> Admin Login <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </form>
+
+                <script>
+                    function togglePasswordVisibility(inputId, btn) {
+                        const input = document.getElementById(inputId);
+                        if (!input) return;
+                        const icon = btn.querySelector('i');
+                        if (input.type === 'password') {
+                            input.type = 'text';
+                            if (icon) {
+                                icon.className = 'fa-solid fa-eye-slash';
+                                icon.style.color = '#3b82f6';
+                            }
+                        } else {
+                            input.type = 'password';
+                            if (icon) {
+                                icon.className = 'fa-solid fa-eye';
+                                icon.style.color = '#64748b';
+                            }
+                        }
+                    }
+                </script>
+
+                <div style="text-align: center; margin-top: 1.5rem;">
+                    <a href="/login" style="color: #000000; font-weight: 800; font-size: 0.95rem; text-decoration: underline;">
+                        <i class="fa-solid fa-user"></i> Back to User Login
+                    </a>
+                </div>
+
+                <div style="text-align: center; margin-top: 1rem; border-top: 1.5px solid #e2e8f0; padding-top: 1rem;">
+                    <a href="/" style="display: inline-flex; align-items: center; gap: 6px; color: #0f172a; font-weight: 700; font-size: 0.9rem; text-decoration: none;">
+                        <i class="fa-solid fa-arrow-left"></i> Return to Homepage
+                    </a>
+                </div>
+            </section>
+        </main>
+    </div>
+</body>
+</html>

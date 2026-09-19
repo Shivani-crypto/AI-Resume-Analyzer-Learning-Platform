@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Career & Learning Dashboard - AI Resume Analyzer Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+</head>
+
+<body>
+    {% set s = stats if (stats is defined and stats) else {} %}
+    {% set ats = s.ats_score|default(0) %}
+    {% set courses_cnt = s.courses_count|default(0) %}
+    {% set courses_avg = s.avg_course_progress|default(0) %}
+    {% set quizzes_cnt = s.quizzes_count|default(0) %}
+    {% set quiz_pass = s.quiz_pass_rate|default(0) %}
+    {% set xp = s.mastery_xp|default(0) %}
+    {% set badges_cnt = s.badges_count|default(0) %}
+    {% set certs_cnt = s.certificates_count|default(0) %}
+
+    <div class="app-container wide">
+        <div class="dashboard-wrapper">
+
+            <!-- Dynamic Alert Banner -->
+            <script>
+                document.addEventListener("DOMContentLoaded", function() {
+                    const params = new URLSearchParams(window.location.search);
+                    const uploadErr = params.get('upload_error');
+                    const quotaErr = params.get('quota_error');
+                    const alertDiv = document.getElementById('dashboardAlertBanner');
+                    if (uploadErr && alertDiv) {
+                        alertDiv.style.display = 'flex';
+                        alertDiv.className = 'dashboard-alert-error';
+                        alertDiv.innerHTML = `<i class="fa-solid fa-circle-exclamation" style="font-size: 1.2rem;"></i> <span><strong>Upload Notice:</strong> ${decodeURIComponent(uploadErr)}</span>`;
+                    } else if (quotaErr && alertDiv) {
+                        alertDiv.style.display = 'flex';
+                        alertDiv.className = 'dashboard-alert-warning';
+                        alertDiv.innerHTML = `<i class="fa-solid fa-crown" style="font-size: 1.2rem;"></i> <span><strong>Plan Quota Notice:</strong> ${decodeURIComponent(quotaErr)}</span>`;
+                    }
+                });
+            </script>
+            <div id="dashboardAlertBanner" style="display: none; margin-bottom: 20px; padding: 14px 20px; border-radius: 12px; font-size: 0.95rem; font-weight: 600; align-items: center; gap: 12px; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.08);"></div>
+
+            <!-- Hero Greeting Header -->
+            <div class="dashboard-hero">
+                <div class="hero-greeting">
+                    <h1>Welcome back, <span class="highlight">{{ name|default('Scholar') }}</span>! 👋</h1>
+                    <p>Your AI Career & Skill Acceleration Command Center</p>
+                    <div class="hero-badges">
+                        {% if is_subscribed %}
+                        <span class="tier-badge pro"><i class="fa-solid fa-crown"></i> Pro Member Active</span>
+                        {% else %}
+                        <span class="tier-badge free"><i class="fa-solid fa-shield"></i> {{ user_role|default('STUDENT')
+                            }} TIER</span>
+                        {% endif %}
+                        <span class="member-since"><i class="fa-regular fa-calendar-check"></i> Member since {{
+                            member_since|default('Recently') }}</span>
+                    </div>
+                </div>
+                <div class="hero-actions">
+                    <button class="btn btn-primary glow-btn" onclick="openUploadModal()">
+                        <i class="fa-solid fa-cloud-arrow-up"></i> Upload New Resume
+                    </button>
+                    {% if current_file %}
+                    <button class="btn btn-outline" onclick="openPreviewModal()">
+                        <i class="fa-solid fa-file-pdf"></i> Preview
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- 4 Top KPI Metric Cards -->
+            <div class="kpi-grid">
+                <!-- Metric 1: ATS Match Score -->
+                <div class="kpi-card">
+                    <div class="kpi-icon-box kpi-icon-emerald">
+                        <i class="fa-solid fa-bullseye"></i>
+                    </div>
+                    <div class="kpi-info">
+                        <div class="kpi-label">ATS Match Score</div>
+                        <div
+                            class="kpi-val {% if ats >= 80 %}val-green{% elif ats >= 50 %}val-amber{% elif ats > 0 %}val-red{% endif %}">
+                            {% if ats > 0 %}{{ ats }}%{% else %}--{% endif %}
+                        </div>
+                        <div class="kpi-sub">
+                            {% if ats >= 80 %}
+                            <span class="val-green"><i class="fa-solid fa-circle-check"></i> High Match</span>
+                            {% elif ats >= 50 %}
+                            <span class="val-amber"><i class="fa-solid fa-triangle-exclamation"></i> Moderate
+                                Match</span>
+                            {% elif ats > 0 %}
+                            <span class="val-red"><i class="fa-solid fa-circle-xmark"></i> Needs Tuning</span>
+                            {% else %}
+                            <span>Upload resume to score</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Metric 2: Active Courses & Progress -->
+                <div class="kpi-card">
+                    <div class="kpi-icon-box kpi-icon-indigo">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                    </div>
+                    <div class="kpi-info">
+                        <div class="kpi-label">Courses In Progress</div>
+                        <div class="kpi-val">{{ courses_cnt }}</div>
+                        <div class="kpi-sub">
+                            <span class="kpi-icon-indigo"><i class="fa-solid fa-chart-pie"></i> {{ courses_avg }}% Avg
+                                Completion</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Metric 3: AI Skill Assessments -->
+                <div class="kpi-card">
+                    <div class="kpi-icon-box kpi-icon-amber">
+                        <i class="fa-solid fa-brain"></i>
+                    </div>
+                    <div class="kpi-info">
+                        <div class="kpi-label">Quizzes Completed</div>
+                        <div class="kpi-val">{{ quizzes_cnt }}</div>
+                        <div class="kpi-sub">
+                            <span class="val-green"><i class="fa-solid fa-circle-check"></i> {{ quiz_pass }}% Pass
+                                Rate</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Metric 4: Mastery XP & Achievements -->
+                <div class="kpi-card">
+                    <div class="kpi-icon-box kpi-icon-purple">
+                        <i class="fa-solid fa-trophy"></i>
+                    </div>
+                    <div class="kpi-info">
+                        <div class="kpi-label">Career Mastery XP</div>
+                        <div class="kpi-val">{{ xp }}</div>
+                        <div class="kpi-sub">
+                            <span><i class="fa-solid fa-award"></i> {{ badges_cnt }} Badges • {{ certs_cnt }}
+                                Certs</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Balanced 2-Column Content Grid -->
+            <div class="dashboard-layout">
+
+                <!-- Left Column: Active Resume & Learning Progress -->
+                <div class="left-col">
+
+                    <!-- Card 1: Active Resume & Skill Gap Analysis -->
+                    <div class="dash-card">
+                        <div class="dash-card-header">
+                            <h3 class="dash-card-title">
+                                <i class="fa-solid fa-file-invoice kpi-icon-indigo"></i> Active Resume & Gap Analysis
+                            </h3>
+                            <button onclick="openUploadModal()" class="dash-card-action">
+                                <i class="fa-solid fa-arrow-rotate-right"></i> Replace File
+                            </button>
+                        </div>
+
+                        {% if current_file %}
+                        <div class="resume-active-box">
+                            <div class="resume-file-info">
+                                <div class="resume-icon">
+                                    <i class="fa-solid fa-file-pdf"></i>
+                                </div>
+                                <div class="resume-details">
+                                    <div class="resume-filename">{{ current_file }}</div>
+                                    <div class="resume-target-role">Target Role: <strong>{{ latest_resume.jd[:35] if
+                                            latest_resume and latest_resume.jd else 'Full-Stack Developer'
+                                            }}...</strong></div>
+                                </div>
+                            </div>
+                            <div
+                                class="resume-score-badge {% if ats >= 80 %}{% elif ats >= 50 %}badge-amber{% else %}badge-red{% endif %}">
+                                <div class="score-val">{% if ats > 0 %}{{ ats }}%{% else %}--{% endif %}</div>
+                                <div class="score-lbl">ATS SCORE</div>
+                            </div>
+                        </div>
+
+                        <!-- Missing Skill Recommendations -->
+                        <div class="skill-section">
+                            <div class="skill-header">
+                                <h4 class="skill-title">
+                                    <i class="fa-solid fa-wand-magic-sparkles kpi-icon-amber"></i> Recommended Skills to
+                                    Master
+                                </h4>
+                                <span class="skill-subtitle">AI Analysis Gaps</span>
+                            </div>
+
+                            {% if missing_skills %}
+                            <div class="skill-chip-group">
+                                {% for skill in missing_skills[:8] %}
+                                <a href="/learning/dashboard" class="skill-chip"
+                                    title="Explore AI Course for {{ skill }}">
+                                    <i class="fa-solid fa-plus"></i> {{ skill }}
+                                </a>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <p class="empty-state-text">
+                                No critical skill gaps identified! Run a target job match to find tailored improvements.
+                            </p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Action Toolbar for Resume -->
+                        <div class="resume-toolbar">
+                            <a href="/analyze_page" class="btn btn-primary">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i> Match New Job
+                            </a>
+                            <a href="/extract_page" class="btn btn-outline">
+                                <i class="fa-solid fa-file-lines"></i> Extracted Text
+                            </a>
+                            <button onclick="openPreviewModal()" class="btn btn-outline">
+                                <i class="fa-solid fa-eye"></i> Preview
+                            </button>
+                        </div>
+
+                        {% else %}
+                        <!-- Empty State for Resume -->
+                        <div class="empty-state-box">
+                            <div class="empty-state-icon">
+                                <i class="fa-solid fa-cloud-arrow-up"></i>
+                            </div>
+                            <h4 class="empty-state-title">No Resume Uploaded Yet</h4>
+                            <p class="empty-state-text">
+                                Upload your PDF or DOCX resume to unlock your AI ATS match score, skill gap breakdown,
+                                and personalized course curriculum.
+                            </p>
+                            <button class="btn btn-primary glow-btn" onclick="openUploadModal()">
+                                <i class="fa-solid fa-plus"></i> Upload Resume Now
+                            </button>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Card 2: In-Progress Courses & Learning Tracker -->
+                    <div class="dash-card">
+                        <div class="dash-card-header">
+                            <h3 class="dash-card-title">
+                                <i class="fa-solid fa-circle-play kpi-icon-indigo"></i> In-Progress Courses & Learning
+                            </h3>
+                            <a href="/learning/dashboard" class="dash-card-action">
+                                Explore All <i class="fa-solid fa-arrow-right"></i>
+                            </a>
+                        </div>
+
+                        <div class="course-list">
+                            {% if courses_in_progress %}
+                            {% for c in courses_in_progress %}
+                            <div class="course-progress-item">
+                                <div class="course-info">
+                                    <div class="course-title-text">{{ c.title }}</div>
+                                    <div class="course-module-text">{{ c.module }}</div>
+                                    <div class="progress-bar-bg">
+                                        <div class="progress-bar-fill" style="width: {{ c.progress }}%;"></div>
+                                    </div>
+                                </div>
+                                <div class="course-action">
+                                    <div class="kpi-val val-indigo">{{ c.progress }}%</div>
+                                    <a href="/learning/dashboard" class="btn btn-primary">Resume</a>
+                                </div>
+                            </div>
+                            {% endfor %}
+                            {% else %}
+                            <!-- Recommended Courses Fallback -->
+                            <p class="empty-state-text">
+                                Explore top recommended courses tailored to your technical profile:
+                            </p>
+                            {% for rc in recommended_courses[:2] %}
+                            <div class="course-rec-item">
+                                <div>
+                                    <div class="course-title-text">{{ rc.title }}</div>
+                                    <div class="course-module-text">
+                                        <i class="fa-solid fa-signal"></i> {{ rc.difficulty_level or 'Intermediate' }} •
+                                        <i class="fa-solid fa-video"></i> Full HD Lessons
+                                    </div>
+                                </div>
+                                <a href="/learning/dashboard" class="btn btn-outline">Start</a>
+                            </div>
+                            {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Right Column: Quick Action Hub & Achievements -->
+                <div class="right-col">
+
+                    <!-- Card 3: Quick Action Hub -->
+                    <div class="dash-card">
+                        <div class="dash-card-header">
+                            <h3 class="dash-card-title">
+                                <i class="fa-solid fa-bolt kpi-icon-amber"></i> Quick Action Hub
+                            </h3>
+                        </div>
+                        <div class="quick-actions-grid">
+                            <a href="/analyze_page" class="quick-tile">
+                                <div class="quick-tile-icon kpi-icon-indigo">
+                                    <i class="fa-solid fa-bullseye"></i>
+                                </div>
+                                <h4 class="quick-tile-title">Scan Target JD</h4>
+                                <p class="quick-tile-desc">Match resume with job post</p>
+                            </a>
+
+                            <a href="/learning/dashboard" class="quick-tile">
+                                <div class="quick-tile-icon kpi-icon-emerald">
+                                    <i class="fa-solid fa-graduation-cap"></i>
+                                </div>
+                                <h4 class="quick-tile-title">Skill Courses</h4>
+                                <p class="quick-tile-desc">Explore AI curriculum</p>
+                            </a>
+
+                            <a href="/learning/dashboard" class="quick-tile">
+                                <div class="quick-tile-icon kpi-icon-amber">
+                                    <i class="fa-solid fa-code-branch"></i>
+                                </div>
+                                <h4 class="quick-tile-title">Live Repo Audit</h4>
+                                <p class="quick-tile-desc">Upgrade GitHub projects</p>
+                            </a>
+
+                            <a href="/learning/history" class="quick-tile">
+                                <div class="quick-tile-icon kpi-icon-purple">
+                                    <i class="fa-solid fa-chart-line"></i>
+                                </div>
+                                <h4 class="quick-tile-title">Career History</h4>
+                                <p class="quick-tile-desc">View full progress log</p>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Card 4: Achievements & Badges -->
+                    <div class="dash-card">
+                        <div class="dash-card-header">
+                            <h3 class="dash-card-title">
+                                <i class="fa-solid fa-award kpi-icon-purple"></i> Earned Badges & Certifications
+                            </h3>
+                        </div>
+
+                        <div class="badges-container">
+                            {% for b in badges %}
+                            <div class="badge-item">
+                                <i class="fa-solid {{ b.icon or 'fa-award' }} kpi-icon-indigo"></i>
+                                <div>
+                                    <div>{{ b.name }}</div>
+                                    <span class="activity-time">{{ b.earned_at }}</span>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        {% if certificates %}
+                        <div class="skill-section">
+                            <div class="skill-title">
+                                <i class="fa-solid fa-certificate kpi-icon-emerald"></i> Verified Certificates ({{
+                                certificates|length }})
+                            </div>
+                            {% for cert in certificates[:2] %}
+                            <div class="cert-item">
+                                <span class="activity-text">{{ cert.title or 'AI Course Certification' }}</span>
+                                <a href="{{ cert.certificate_url }}" target="_blank" class="dash-card-action">
+                                    <i class="fa-solid fa-download"></i> View
+                                </a>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- Full-Width Bottom Card: Recent Activity Stream (Balanced Layout) -->
+            <div class="dash-card-full">
+                <div class="dash-card-header">
+                    <h3 class="dash-card-title">
+                        <i class="fa-solid fa-clock-rotate-left kpi-icon-indigo"></i> Recent Career & Platform Activity
+                    </h3>
+                    <a href="/learning/history" class="dash-card-action">
+                        View Full Timeline <i class="fa-solid fa-arrow-right"></i>
+                    </a>
+                </div>
+                <div class="activity-grid">
+                    {% for act in activities %}
+                    <div class="activity-card">
+                        <div class="activity-icon-badge">
+                            <i class="fa-solid fa-bolt"></i>
+                        </div>
+                        <div>
+                            <div class="activity-text">{{ act.action }}</div>
+                            <div class="activity-time">{{ act.timestamp }}</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Upload Resume Modal -->
+    <div id="uploadResumeModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-header">
+                <div class="hero-actions">
+                    <div class="modal-header-icon">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                    </div>
+                    <div>
+                        <h3 class="dash-card-title">Upload Resume</h3>
+                        <p class="activity-time">Supported formats: PDF, DOCX (Max 10MB)</p>
+                    </div>
+                </div>
+                <button onclick="closeUploadModal()" class="modal-close-btn">&times;</button>
+            </div>
+
+            <div class="modal-body">
+                <form action="/upload" method="POST" enctype="multipart/form-data">
+                    <div class="upload-dropzone" onclick="document.getElementById('modalFileInput').click()">
+                        <i class="fa-solid fa-file-arrow-up kpi-icon-box kpi-icon-indigo"></i>
+                        <div class="empty-state-title" id="modalFileNameDisplay">Drag & Drop Resume or Click to Browse
+                        </div>
+                        <div class="empty-state-text">PDF or DOCX documents</div>
+                        <input type="file" id="modalFileInput" name="resume" class="file-input" required
+                            onchange="updateModalFile(this)">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary glow-btn w-full">
+                        <i class="fa-solid fa-cloud-arrow-up"></i> Upload & Process Resume
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resume Preview Modal -->
+    {% if current_file %}
+    <div id="previewResumeModal" class="modal-overlay">
+        <div class="modal-box preview-modal-box">
+            <div class="modal-header">
+                <div class="hero-actions">
+                    <i class="fa-solid fa-file-pdf val-red"></i>
+                    <span class="resume-filename">{{ current_file }}</span>
+                </div>
+                <button onclick="closePreviewModal()" class="modal-close-btn">&times;</button>
+            </div>
+            <div class="preview-iframe-wrapper">
+                <iframe src="{{ url_for('uploaded_file', filename=current_file) }}" width="100%" height="100%"></iframe>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <script>
+        function openUploadModal() {
+            document.getElementById('uploadResumeModal').style.display = 'flex';
+        }
+
+        function closeUploadModal() {
+            document.getElementById('uploadResumeModal').style.display = 'none';
+        }
+
+        function openPreviewModal() {
+            const modal = document.getElementById('previewResumeModal');
+            if (modal) modal.style.display = 'flex';
+        }
+
+        function closePreviewModal() {
+            const modal = document.getElementById('previewResumeModal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        function updateModalFile(input) {
+            if (input.files && input.files[0]) {
+                document.getElementById('modalFileNameDisplay').innerHTML = '<i class="fa-solid fa-file-circle-check val-green"></i> ' + input.files[0].name;
+            }
+        }
+
+        // Close on escape key
+        window.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                closeUploadModal();
+                closePreviewModal();
+                closePaymentModal();
+            }
+        });
+
+        let currentModalPlan = "Starter Pro";
+        let currentModalBasePrice = 999.0;
+        let currentModalDiscount = 0.0;
+        let currentModalAppliedCoupon = "";
+
+        function getModalPayablePrice() {
+            return Math.max(0, currentModalBasePrice - currentModalDiscount);
+        }
+
+        function selectModalPlan(planName, basePrice) {
+            currentModalPlan = planName;
+            currentModalBasePrice = basePrice;
+
+            const cardBasic = document.getElementById('planCardBasic') || document.getElementById('planCardStarter');
+            const cardPro = document.getElementById('planCardPro');
+            const cardVIP = document.getElementById('planCardVIP') || document.getElementById('planCardUnlimited');
+
+            const badgeBasic = document.getElementById('planBadgeBasic') || document.getElementById('planBadgeStarter');
+            const badgePro = document.getElementById('planBadgePro');
+            const badgeVIP = document.getElementById('planBadgeVIP') || document.getElementById('planBadgeUnlimited');
+
+            [cardBasic, cardPro, cardVIP].forEach(card => {
+                if (card) card.style.border = '2px solid #e2e8f0';
+            });
+            [badgeBasic, badgePro, badgeVIP].forEach(badge => {
+                if (badge) badge.style.display = 'none';
+            });
+
+            const clean = (planName || '').toLowerCase();
+            if (clean.includes('basic') || basePrice === 99) {
+                if (cardBasic) cardBasic.style.border = '2px solid #4338ca';
+                if (badgeBasic) { badgeBasic.style.display = 'block'; badgeBasic.innerText = 'SELECTED'; }
+            } else if (clean.includes('vip') || clean.includes('4999') || basePrice === 4999) {
+                if (cardVIP) cardVIP.style.border = '2px solid #16a34a';
+                if (badgeVIP) { badgeVIP.style.display = 'block'; badgeVIP.innerText = 'VIP ACCESS'; }
+            } else {
+                if (cardPro) cardPro.style.border = '2px solid #2563eb';
+                if (badgePro) { badgePro.style.display = 'block'; badgePro.innerText = 'SELECTED'; }
+            }
+
+            updateModalPriceDisplay();
+        }
+
+        function updateModalPriceDisplay() {
+            const payable = getModalPayablePrice();
+            const priceEl = document.getElementById('gatewayPlanPrice');
+            const rzpBtnText = document.getElementById('btnRzpAmountText');
+            const upiAmountText = document.getElementById('gwUpiAmountDisplay');
+            const discountPill = document.getElementById('gatewayDiscountPill');
+
+            if (priceEl) priceEl.innerText = `₹${payable.toLocaleString('en-IN')}`;
+            if (rzpBtnText) rzpBtnText.innerText = `₹${payable.toLocaleString('en-IN')}`;
+            if (upiAmountText) upiAmountText.innerText = `₹${payable.toLocaleString('en-IN')}`;
+
+            if (currentModalDiscount > 0 && discountPill) {
+                discountPill.style.display = 'inline-block';
+                discountPill.innerText = `Save ₹${currentModalDiscount.toLocaleString('en-IN')}`;
+            } else if (discountPill) {
+                discountPill.style.display = 'none';
+            }
+
+            // Refresh Dynamic UPI QR Code
+            const upiIdEl = document.getElementById('gwUpiIdText');
+            const qrImg = document.getElementById('gwUpiQrImage');
+            fetch(`/api/subscriptions/upi-qr-config?plan_name=${encodeURIComponent(currentModalPlan)}${currentModalDiscount > 0 ? '&coupon_code=' + encodeURIComponent(currentModalCoupon) : ''}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (data && data.qr_code_url && qrImg) qrImg.src = data.qr_code_url;
+                    if (data && data.upi_id && upiIdEl) upiIdEl.innerText = data.upi_id;
+                })
+                .catch(() => {
+                    const upiId = upiIdEl?.innerText?.trim() || 'truprojects@upi';
+                    const upiUri = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=AI_Career_Pro&am=${payable.toFixed(2)}&cu=INR&tn=${encodeURIComponent(currentModalPlan + ' Pro Access')}`;
+                    if (qrImg) qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=8&data=${encodeURIComponent(upiUri)}`;
+                });
+        }
+
+        function switchModalTab(tab) {
+            ['upiqr', 'razorpay', 'promo'].forEach(t => {
+                const btn = document.getElementById('tabBtn' + t.charAt(0).toUpperCase() + t.slice(1));
+                const content = document.getElementById('tabContent' + t.charAt(0).toUpperCase() + t.slice(1));
+                if (t === tab) {
+                    if (btn) {
+                        btn.style.background = '#ffffff';
+                        btn.style.color = '#4338ca';
+                        btn.style.boxShadow = '0 2px 6px rgba(0,0,0,0.06)';
+                        btn.style.fontWeight = '700';
+                    }
+                    if (content) content.style.display = 'block';
+                } else {
+                    if (btn) {
+                        btn.style.background = 'transparent';
+                        btn.style.color = '#64748b';
+                        btn.style.boxShadow = 'none';
+                        btn.style.fontWeight = '600';
+                    }
+                    if (content) content.style.display = 'none';
+                }
+            });
+            const errDiv = document.getElementById('gwErrorMsg');
+            if (errDiv) errDiv.style.display = 'none';
+        }
+
+        async function launchCleanRazorpayCheckout() {
+            const procDiv = document.getElementById('gwProcessingStatus');
+            const procText = document.getElementById('gwProcessingText');
+            const errDiv = document.getElementById('gwErrorMsg');
+            if (errDiv) errDiv.style.display = 'none';
+            if (procDiv) {
+                procDiv.style.display = 'block';
+                if (procText) procText.innerText = 'Connecting to Secure Razorpay Gateway...';
+            }
+
+            const payable = getModalPayablePrice();
+
+            try {
+                const orderRes = await fetch('/api/subscriptions/razorpay/create-order', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        amount: payable,
+                        currency: 'INR',
+                        plan_name: currentModalPlan
+                    })
+                });
+                const orderData = await orderRes.json();
+                if (!orderRes.ok || !orderData.id) {
+                    throw new Error(orderData.detail || "Failed to initialize Razorpay checkout order.");
+                }
+
+                if (!window.Razorpay) {
+                    throw new Error("Razorpay script not loaded. Please use Direct UPI QR.");
+                }
+
+                const options = {
+                    key: orderData.key_id || "rzp_test_Tb2WVgfrElnHZH",
+                    amount: orderData.amount,
+                    currency: orderData.currency || "INR",
+                    name: "TruProjects AI Career Academy",
+                    description: `${currentModalPlan} Access`,
+                    image: "https://razorpay.com/favicon.png",
+                    order_id: orderData.id,
+                    handler: async function (response) {
+                        if (procDiv) {
+                            procDiv.style.display = 'block';
+                            if (procText) procText.innerText = 'Verifying signature & activating Membership...';
+                        }
+                        try {
+                            const verifyRes = await fetch('/api/subscriptions/razorpay/verify-payment', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    razorpay_payment_id: response.razorpay_payment_id,
+                                    razorpay_order_id: response.razorpay_order_id,
+                                    razorpay_signature: response.razorpay_signature || `sig_${Date.now()}`,
+                                    plan_name: currentModalPlan,
+                                    amount: payable
+                                })
+                            });
+                            const verifyData = await verifyRes.json();
+                            if (verifyRes.ok && verifyData.success) {
+                                if (verifyData.requires_admin_approval || verifyData.status === 'PENDING_ADMIN_APPROVAL') {
+                                    if (procText) procText.innerHTML = '<i class="fa-solid fa-hourglass-half" style="color: #f59e0b;"></i> Payment Received! Submitted for Admin Approval. Access will unlock once Admin accepts your payment.';
+                                    setTimeout(() => window.location.reload(), 2500);
+                                } else {
+                                    if (procText) procText.innerHTML = '<i class="fa-solid fa-circle-check" style="color: #10b981;"></i> Payment Verified! Unlocking membership...';
+                                    setTimeout(() => window.location.reload(), 1000);
+                                }
+                            } else {
+                                throw new Error(verifyData.detail || "Payment signature verification failed.");
+                            }
+                        } catch(vErr) {
+                            if (errDiv) {
+                                errDiv.style.display = 'block';
+                                errDiv.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> ' + vErr.message;
+                            }
+                        }
+                    },
+                    prefill: {
+                        name: "Valued Candidate",
+                        email: "{{ user_email if user_email else 'candidate@example.com' }}",
+                        contact: "9876543210"
+                    },
+                    theme: { color: "#4338ca" },
+                    modal: {
+                        ondismiss: function() {
+                            if (procDiv) procDiv.style.display = 'none';
+                        }
+                    }
+                };
+
+                const rzp = new window.Razorpay(options);
+                rzp.on('payment.failed', function (resp){
+                    if (errDiv) {
+                        errDiv.style.display = 'block';
+                        errDiv.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> Payment notice: ' + (resp.error.description || resp.error.reason);
+                    }
+                });
+                if (procDiv) procDiv.style.display = 'none';
+                rzp.open();
+            } catch(err) {
+                if (procDiv) procDiv.style.display = 'none';
+                if (errDiv) {
+                    errDiv.style.display = 'block';
+                    errDiv.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> Razorpay Notice: ' + err.message + '. Please use Direct UPI QR above.';
+                }
+            }
+        }
+
+        function copyUpiId() {
+            const upiId = document.getElementById('gwUpiIdText')?.innerText?.trim() || 'truprojects@upi';
+            navigator.clipboard.writeText(upiId);
+            const copyBtnText = document.getElementById('gwCopyBtnText');
+            if (copyBtnText) {
+                copyBtnText.innerText = 'Copied!';
+                setTimeout(() => { copyBtnText.innerText = 'Copy'; }, 2000);
+            }
+        }
+
+        async function submitUpiUtrPayment() {
+            const utrInput = document.getElementById('gwUtrNumber');
+            const utr = (utrInput?.value || '').trim();
+            const errDiv = document.getElementById('gwErrorMsg');
+            const procDiv = document.getElementById('gwProcessingStatus');
+            const procText = document.getElementById('gwProcessingText');
+            const btn = document.getElementById('btnVerifyUpiUtr');
+
+            if (!utr || utr.length < 8) {
+                if (errDiv) {
+                    errDiv.style.display = 'block';
+                    errDiv.style.background = '#fef2f2';
+                    errDiv.style.border = '1px solid #fecaca';
+                    errDiv.style.color = '#991b1b';
+                    errDiv.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> Please enter a valid 12-digit UPI UTR / Reference number from your payment app.';
+                }
+                if (utrInput) utrInput.focus();
+                return;
+            }
+
+            if (errDiv) errDiv.style.display = 'none';
+            if (procDiv) {
+                procDiv.style.display = 'block';
+                if (procText) procText.innerText = `Verifying UPI UTR Reference for ${currentModalPlan}...`;
+            }
+            if (btn) btn.disabled = true;
+
+            try {
+                const token = localStorage.getItem('access_token');
+                const headers = { 'Content-Type': 'application/json' };
+                if (token) headers['Authorization'] = 'Bearer ' + token;
+
+                const res = await fetch('/api/subscriptions/verify-upi-payment', {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify({
+                        utr_number: utr,
+                        plan_name: currentModalPlan,
+                        amount: getModalPayablePrice(),
+                        coupon_code: currentModalAppliedCoupon || null
+                    })
+                });
+
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    if (data.requires_admin_approval || data.status === 'PENDING_ADMIN_APPROVAL') {
+                        if (procText) procText.innerHTML = '<i class="fa-solid fa-hourglass-half" style="color: #f59e0b;"></i> Payment Received! Submitted for Admin Approval. Once Admin accepts your payment, your subscription will be activated.';
+                        setTimeout(() => window.location.reload(), 2500);
+                    } else {
+                        if (procText) procText.innerHTML = '<i class="fa-solid fa-circle-check" style="color: #16a34a;"></i> Coupon Applied! Subscription activated instantly without requiring Admin approval.';
+                        setTimeout(() => window.location.reload(), 1000);
+                    }
+                } else {
+                    if (procDiv) procDiv.style.display = 'none';
+                    if (errDiv) {
+                        errDiv.style.display = 'block';
+                        errDiv.style.background = '#fef2f2';
+                        errDiv.style.border = '1px solid #fecaca';
+                        errDiv.style.color = '#991b1b';
+                        errDiv.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> ' + (data.detail || data.message || 'Failed to verify UPI UTR.');
+                    }
+                    if (btn) btn.disabled = false;
+                }
+            } catch (err) {
+                if (procDiv) procDiv.style.display = 'none';
+                if (errDiv) {
+                    errDiv.style.display = 'block';
+                    errDiv.style.background = '#fef2f2';
+                    errDiv.style.border = '1px solid #fecaca';
+                    errDiv.style.color = '#991b1b';
+                    errDiv.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> Error communicating with server: ' + err.message;
+                }
+                if (btn) btn.disabled = false;
+            }
+        }
+
+        function openPaymentModal(planTitle, price) {
+            const clean = (planTitle || '').toLowerCase();
+            if (clean.includes('vip') || clean.includes('4999') || (price && price > 2000)) {
+                selectModalPlan('VIP Lifetime', 4999.0);
+            } else if (clean.includes('pro') || clean.includes('999') || (price && price > 100)) {
+                selectModalPlan('Pro Unlimited', 999.0);
+            } else {
+                selectModalPlan('Basic Pack', 99.0);
+            }
+            document.getElementById('globalPaymentModal').style.display = 'flex';
+            document.getElementById('gwErrorMsg').style.display = 'none';
+            document.getElementById('gwProcessingStatus').style.display = 'none';
+            switchModalTab('razorpay');
+        }
+
+        function closePaymentModal() {
+            document.getElementById('globalPaymentModal').style.display = 'none';
+        }
+
+        async function applyCoupon() {
+            const code = (document.getElementById('gwCouponCode')?.value || '').trim();
+            const errDiv = document.getElementById('gwErrorMsg');
+            if (!code) return;
+
+            errDiv.style.display = 'block';
+            errDiv.style.background = '#eef2ff';
+            errDiv.style.border = '1px solid #c7d2fe';
+            errDiv.style.color = '#4338ca';
+            errDiv.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Validating coupon...';
+
+            try {
+                const token = localStorage.getItem('access_token');
+                const headers = { 'Content-Type': 'application/json' };
+                if (token) headers['Authorization'] = 'Bearer ' + token;
+
+                const res = await fetch('/api/subscriptions/coupons/validate', {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify({
+                        coupon_code: code,
+                        plan_name: currentModalPlan,
+                        original_amount: currentModalBasePrice
+                    })
+                });
+                const data = await res.json();
+                if (res.ok && data.valid) {
+                    currentModalDiscount = data.discount_amount || 0.0;
+                    currentModalAppliedCoupon = code;
+                    updateModalPriceDisplay();
+
+                    errDiv.style.background = '#f0fdf4';
+                    errDiv.style.border = '1px solid #bbf7d0';
+                    errDiv.style.color = '#15803d';
+                    errDiv.innerHTML = `<i class="fa-solid fa-circle-check"></i> Coupon applied! ₹${data.discount_amount} Discount. Final payable: ₹${data.final_amount}`;
+
+                    if (data.final_amount === 0) {
+                        setTimeout(async () => {
+                            await fetch('/upgrade', {
+                                method: 'POST',
+                                headers: headers,
+                                body: JSON.stringify({ coupon: code, payment_method: 'coupon', amount: 0.0 })
+                            });
+                            window.location.reload();
+                        }, 800);
+                    }
+                    return;
+                } else {
+                    errDiv.style.background = '#fef2f2';
+                    errDiv.style.border = '1px solid #fecaca';
+                    errDiv.style.color = '#991b1b';
+                    errDiv.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> ' + (data.message || data.detail || 'Invalid coupon code.');
+                    return;
+                }
+            } catch (e) {
+                errDiv.style.background = '#fef2f2';
+                errDiv.style.border = '1px solid #fecaca';
+                errDiv.style.color = '#991b1b';
+                errDiv.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> ' + (e.message || 'Failed to apply coupon.');
+            }
+        }
+
+        // Check for Quota Error in URL
+        document.addEventListener("DOMContentLoaded", function () {
+            const params = new URLSearchParams(window.location.search);
+            if (params.has('quota_error')) {
+                const msg = decodeURIComponent(params.get('quota_error'));
+                alert(msg);
+                openPaymentModal('Unlimited Pro', 4999.0);
+            }
+        });
+    </script>
+
+    <!-- REALISTIC GLOBAL PAYMENT GATEWAY MODAL -->
+    <div id="globalPaymentModal" onclick="if(event.target===this)closePaymentModal()"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.75); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(8px); padding: 16px; box-sizing: border-box;">
+        <div class="gateway-modal"
+            style="background: #ffffff; width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto; border-radius: 18px; position: relative; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); font-family: 'Outfit', system-ui, sans-serif;">
+
+            <!-- Gateway Header -->
+            <div
+                style="background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); color: white; padding: 1.5rem 1.8rem; position: relative;">
+                <button onclick="closePaymentModal()"
+                    style="position: absolute; top: 1.2rem; right: 1.5rem; background: rgba(255,255,255,0.1); border: none; font-size: 1.2rem; cursor: pointer; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">&times;</button>
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
+                    <span
+                        style="background: rgba(99, 102, 241, 0.25); border: 1px solid rgba(99, 102, 241, 0.5); color: #a5b4fc; padding: 2px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;">
+                        <i class="fa-solid fa-lock"></i> 256-Bit SSL Encrypted
+                    </span>
+                    <span style="color: #10b981; font-size: 0.75rem; font-weight: 600;"><i
+                            class="fa-solid fa-shield-check"></i> PCI-DSS Level 1</span>
+                </div>
+                <h3 style="margin: 0; font-size: 1.35rem; font-weight: 700; color: #ffffff;"> Secure Checkout</h3>
+                <p style="margin: 4px 0 0 0; color: #94a3b8; font-size: 0.85rem;">Unlock All AI Micro-Courses, Video
+                    Demos & Verified Certifications</p>
+            </div>
+
+            <!-- Order Summary Banner -->
+            <div style="background: #f8fafc; padding: 1rem 1.8rem; border-bottom: 1px solid #e2e8f0;">
+                <div
+                    style="font-size: 0.78rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">
+                    Select Membership Plan:
+                </div>
+                <!-- 3-Tier Plan Selector -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+                    <!-- Tier 1: Basic Pack (₹99) -->
+                    <div id="planCardBasic" onclick="selectModalPlan('Basic Pack', 99.0)"
+                        style="background: #ffffff; border: 2px solid #4338ca; border-radius: 12px; padding: 10px 8px; cursor: pointer; transition: all 0.2s; position: relative;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                            <span style="font-weight: 800; font-size: 0.82rem; color: #0f172a;" id="planTitleBasic">Basic Pack</span>
+                            <span style="font-size: 0.95rem; font-weight: 800; color: #4338ca;">₹99</span>
+                        </div>
+                        <div style="font-size: 0.70rem; color: #64748b; line-height: 1.25;">
+                            10 Resumes • Courses<br>10 Quizzes • 5 Certs
+                        </div>
+                        <div id="planBadgeBasic" style="position: absolute; top: -8px; right: 6px; background: #4338ca; color: white; font-size: 0.60rem; font-weight: 800; padding: 1px 5px; border-radius: 8px;">
+                            SELECTED
+                        </div>
+                    </div>
+
+                    <!-- Tier 2: Pro Unlimited (₹999) -->
+                    <div id="planCardPro" onclick="selectModalPlan('Pro Unlimited', 999.0)"
+                        style="background: #ffffff; border: 2px solid #e2e8f0; border-radius: 12px; padding: 10px 8px; cursor: pointer; transition: all 0.2s; position: relative;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                            <span style="font-weight: 800; font-size: 0.82rem; color: #0f172a;" id="planTitlePro">Pro Pack</span>
+                            <span style="font-size: 0.95rem; font-weight: 800; color: #2563eb;">₹999</span>
+                        </div>
+                        <div style="font-size: 0.70rem; color: #64748b; line-height: 1.25;">
+                            Unlimited Resumes<br>All Courses & Certs
+                        </div>
+                        <div id="planBadgePro" style="display: none; position: absolute; top: -8px; right: 6px; background: #2563eb; color: white; font-size: 0.60rem; font-weight: 800; padding: 1px 5px; border-radius: 8px;">
+                            POPULAR
+                        </div>
+                    </div>
+
+                    <!-- Tier 3: VIP Lifetime (₹4,999) -->
+                    <div id="planCardVIP" onclick="selectModalPlan('VIP Lifetime', 4999.0)"
+                        style="background: #ffffff; border: 2px solid #e2e8f0; border-radius: 12px; padding: 10px 8px; cursor: pointer; transition: all 0.2s; position: relative;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                            <span style="font-weight: 800; font-size: 0.82rem; color: #0f172a;" id="planTitleVIP">VIP Life</span>
+                            <span style="font-size: 0.95rem; font-weight: 800; color: #16a34a;">₹4,999</span>
+                        </div>
+                        <div style="font-size: 0.70rem; color: #64748b; line-height: 1.25;">
+                            VIP Unlimited<br>Instant Discount
+                        </div>
+                        <div id="planBadgeVIP" style="display: none; position: absolute; top: -8px; right: 6px; background: #16a34a; color: white; font-size: 0.60rem; font-weight: 800; padding: 1px 5px; border-radius: 8px;">
+                            VIP ACCESS
+                        </div>
+                    </div>
+                </div>
+
+                <div
+                    style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding-top: 8px; border-top: 1px dashed #e2e8f0;">
+                    <div style="font-size: 0.82rem; color: #475569;">
+                        Total Payable: <strong style="font-size: 1.15rem; color: #0f172a;"
+                            id="gatewayPlanPrice">₹999</strong>
+                        <span id="gatewayDiscountPill"
+                            style="display: none; background: #dcfce7; color: #15803d; font-size: 0.72rem; font-weight: 800; padding: 2px 6px; border-radius: 6px; margin-left: 6px;"></span>
+                    </div>
+                    <div style="font-size: 0.72rem; color: #10b981; font-weight: 700;"><i
+                            class="fa-solid fa-shield-check"></i> Zero Tax • Instant Access</div>
+                </div>
+            </div>
+
+            <!-- Clean Payment Actions Body -->
+            <div style="padding: 20px 24px;">
+                <!-- Payment Mode Selector Tabs -->
+                <div style="display: flex; gap: 6px; background: #f1f5f9; padding: 4px; border-radius: 12px; margin-bottom: 16px;">
+                    <button type="button" id="tabBtnUpiQr" onclick="switchModalTab('upiqr')"
+                        style="flex: 1; padding: 9px 8px; border: none; border-radius: 9px; font-weight: 700; font-size: 0.84rem; cursor: pointer; background: #ffffff; color: #4338ca; box-shadow: 0 2px 6px rgba(0,0,0,0.06); display: flex; align-items: center; justify-content: center; gap: 6px;">
+                        <i class="fa-solid fa-qrcode"></i> Direct UPI QR
+                    </button>
+                    <button type="button" id="tabBtnRazorpay" onclick="switchModalTab('razorpay')"
+                        style="flex: 1; padding: 9px 8px; border: none; border-radius: 9px; font-weight: 600; font-size: 0.84rem; cursor: pointer; background: transparent; color: #64748b; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                        <i class="fa-solid fa-bolt"></i> Razorpay / Cards
+                    </button>
+                    <button type="button" id="tabBtnPromo" onclick="switchModalTab('promo')"
+                        style="flex: 1; padding: 9px 8px; border: none; border-radius: 9px; font-weight: 600; font-size: 0.84rem; cursor: pointer; background: transparent; color: #64748b; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                        <i class="fa-solid fa-tag"></i> Coupon
+                    </button>
+                </div>
+
+                <!-- TAB 1: DIRECT UPI QR SCANNER (0% Fee, GPay, PhonePe, Paytm, BHIM) -->
+                <div id="tabContentUpiQr" style="display: block;">
+                    <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 14px; padding: 14px; text-align: center; margin-bottom: 14px;">
+                        <div style="display: flex; justify-content: center; margin-bottom: 10px;">
+                            <div style="background: white; padding: 8px; border-radius: 12px; border: 1px solid #cbd5e1; box-shadow: 0 4px 12px rgba(0,0,0,0.05); display: inline-block;">
+                                <img id="gwUpiQrImage"
+                                    src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=8&data=upi%3A%2F%2Fpay%3Fpa%3Dtruprojects%40upi%26pn%3DAI_Career_Pro%26am%3D999.00%26cu%3DINR"
+                                    alt="UPI QR Code" style="width: 170px; height: 170px; display: block;">
+                            </div>
+                        </div>
+
+                        <div style="font-size: 0.85rem; color: #475569; margin-bottom: 6px;">
+                            Scan to pay <strong id="gwUpiAmountDisplay">₹999</strong> with <strong>Google Pay, PhonePe, Paytm, BHIM</strong>
+                        </div>
+
+                        <!-- UPI ID & Copy -->
+                        <div style="display: inline-flex; align-items: center; gap: 8px; background: #ffffff; border: 1px solid #cbd5e1; padding: 5px 12px; border-radius: 20px; font-size: 0.85rem;">
+                            <span style="font-weight: 700; color: #0f172a;" id="gwUpiIdText">truprojects@upi</span>
+                            <button type="button" onclick="copyUpiId()"
+                                style="background: #eef2ff; border: none; color: #4f46e5; font-weight: 700; font-size: 0.75rem; padding: 3px 8px; border-radius: 6px; cursor: pointer;">
+                                <i class="fa-regular fa-copy"></i> <span id="gwCopyBtnText">Copy</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: UTR Reference Submission -->
+                    <div style="margin-bottom: 10px;">
+                        <label style="display: block; font-size: 0.82rem; font-weight: 700; color: #0f172a; margin-bottom: 5px;">
+                            <i class="fa-solid fa-receipt" style="color: #2563eb;"></i> Enter 12-Digit UPI UTR / Ref Number after payment:
+                        </label>
+                        <input type="text" id="gwUtrNumber" placeholder="e.g. 423981729102" maxlength="22"
+                            style="width: 100%; padding: 11px 14px; border: 2px solid #cbd5e1; border-radius: 10px; font-size: 0.95rem; font-weight: 700; outline: none; box-sizing: border-box; font-family: monospace; letter-spacing: 1px;">
+                    </div>
+
+                    <button type="button" id="btnVerifyUpiUtr" onclick="submitUpiUtrPayment()" class="btn btn-primary"
+                        style="width: 100%; font-size: 0.98rem; padding: 13px; background: linear-gradient(135deg, #16a34a 0%, #15803d 100%); color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 14px rgba(22, 163, 74, 0.35);">
+                        <i class="fa-solid fa-circle-check"></i> Verify UTR & Activate Plan
+                    </button>
+                </div>
+
+                <!-- TAB 2: RAZORPAY OFFICIAL GATEWAY -->
+                <div id="tabContentRazorpay" style="display: none;">
+                    <div style="background: linear-gradient(135deg, #072654 0%, #0d3b7a 100%); padding: 20px; border-radius: 14px; margin-bottom: 14px; text-align: center; color: white; box-shadow: 0 4px 14px rgba(7, 38, 84, 0.2);">
+                        <img src="https://razorpay.com/favicon.png" alt="Razorpay" style="width: 42px; height: 42px; border-radius: 10px; background: white; padding: 4px; margin-bottom: 10px;">
+                        <h4 style="margin: 0 0 4px 0; font-size: 1.1rem; color: #ffffff; font-weight: 800;">Official Razorpay Instant Gateway</h4>
+                        <p style="margin: 0 0 14px 0; font-size: 0.82rem; color: #93c5fd;">Pay securely using Credit/Debit Cards, NetBanking, Wallets & UPI</p>
+                        
+                        <div style="display: flex; justify-content: center; gap: 10px; font-size: 0.74rem; color: #e2e8f0; margin-bottom: 16px; background: rgba(255,255,255,0.08); padding: 8px 12px; border-radius: 8px; flex-wrap: wrap;">
+                            <span><i class="fa-solid fa-credit-card"></i> Cards</span> •
+                            <span><i class="fa-solid fa-building-columns"></i> NetBanking</span> •
+                            <span><i class="fa-solid fa-mobile-screen"></i> GPay / PhonePe / Paytm</span>
+                        </div>
+
+                        <button type="button" onclick="launchCleanRazorpayCheckout()" style="width: 100%; background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: white; border: none; padding: 13px; border-radius: 10px; font-weight: 800; font-size: 0.98rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);">
+                            <i class="fa-solid fa-bolt"></i> Pay via Razorpay (<span id="btnRzpAmountText">₹999</span>)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- TAB 3: COUPON / PROMO CODE -->
+                <div id="tabContentPromo" style="display: none;">
+                    <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 14px; padding: 16px;">
+                        <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #0f172a; margin-bottom: 8px;">
+                            <i class="fa-solid fa-tag" style="color: #6366f1;"></i> Enter Promotional Coupon Code:
+                        </label>
+                        <div style="display: flex; gap: 8px;">
+                            <input type="text" id="gwCouponCode" placeholder="Enter Coupon Code"
+                                style="flex: 1; padding: 11px 14px; border: 2px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem; font-weight: 700; outline: none; text-transform: uppercase;">
+                            <button type="button" onclick="applyCoupon()"
+                                style="padding: 11px 20px; background: #4f46e5; border: none; border-radius: 8px; font-size: 0.9rem; font-weight: 800; color: #ffffff; cursor: pointer;">
+                                Apply
+                            </button>
+                        </div>
+                        <div style="background: #e0e7ff; border: 1px solid #c7d2fe; border-radius: 8px; padding: 8px 12px; margin-top: 10px; font-size: 0.82rem; color: #3730a3;">
+                            <i class="fa-solid fa-sparkles"></i> Apply your valid promo or discount coupon code to redeem instant savings on your plan.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Processing & Error Status -->
+                <div id="gwProcessingStatus" style="display: none; margin-top: 14px; text-align: center;">
+                    <i class="fa-solid fa-circle-notch fa-spin"
+                        style="color: #4f46e5; font-size: 1.4rem; margin-bottom: 6px;"></i>
+                    <p id="gwProcessingText" style="margin: 0; font-size: 0.85rem; font-weight: 600; color: #4338ca;">
+                        Connecting to Banking Gateway...</p>
+                </div>
+
+                <div id="gwErrorMsg"
+                    style="display: none; margin-top: 14px; padding: 11px 14px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px; color: #991b1b; font-size: 0.85rem; font-weight: 500;">
+                </div>
+
+                <div style="text-align: center; margin-top: 16px; padding-top: 10px; border-top: 1px solid #f1f5f9;">
+                    <button type="button" onclick="closePaymentModal()" style="background: transparent; border: none; color: #64748b; font-size: 0.82rem; font-weight: 600; cursor: pointer; text-decoration: underline;">
+                        <i class="fa-solid fa-xmark"></i> Cancel & Close Modal
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

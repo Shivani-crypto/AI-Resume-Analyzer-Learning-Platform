@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up & Verify Email - AI Resume Analyzer Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="dashboard-body" style="background: #f8fafc; color: #0f172a; min-height: 100vh;">
+    <div class="app-container" style="max-width: 520px; margin: 3vh auto; padding: 0 16px;">
+        <!-- Top Navigation -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <a href="/" class="btn-home-nav" style="display: inline-flex; align-items: center; gap: 8px; background: #0f172a; color: #ffffff; padding: 8px 16px; border-radius: 30px; font-weight: 700; font-size: 0.88rem; text-decoration: none;">
+                <i class="fa-solid fa-house"></i> Home
+            </a>
+            <a href="/login" style="color: #0f172a; font-weight: 800; font-size: 0.92rem; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+                <i class="fa-solid fa-right-to-bracket"></i> Login
+            </a>
+        </div>
+
+        <header class="app-header small-header" style="text-align: center; margin-bottom: 1.5rem;">
+            <div style="display: inline-flex; align-items: center; justify-content: center; width: 56px; height: 56px; background: #eff6ff; color: #2563eb; border-radius: 16px; font-size: 1.6rem; margin-bottom: 0.75rem; border: 1px solid #bfdbfe;">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <h1 style="color: #0f172a; font-weight: 800; font-size: 2.1rem; letter-spacing: -0.5px; margin: 0;">
+                Create Your Account
+            </h1>
+            <p style="color: #475569; font-weight: 500; font-size: 0.95rem; margin-top: 6px;">
+                Verify your email address via OTP to access AI Career Pro.
+            </p>
+        </header>
+
+        <main>
+            <section class="card glass-panel" style="background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 16px; box-shadow: 0 20px 40px rgba(0,0,0,0.06); padding: 2rem;">
+                
+                <!-- Dynamic Status Alert Box -->
+                <div id="alertBox" class="auth-alert-box" style="display: {% if error %}flex{% else %}none{% endif %};" class="{% if error %}auth-alert-error{% endif %}">
+                    <i id="alertIcon" class="fa-solid {% if error %}fa-circle-exclamation{% else %}fa-circle-info{% endif %}"></i>
+                    <span id="alertMsg">{% if error %}{{ error }}{% endif %}</span>
+                </div>
+
+                <form id="signupForm" action="/signup" method="POST" class="modern-form">
+                    <!-- Full Name -->
+                    <div class="input-group" style="margin-bottom: 1rem;">
+                        <label style="color: #0f172a; font-weight: 700; font-size: 0.9rem; margin-bottom: 6px; display: block;">Full Name</label>
+                        <input type="text" id="fullNameInput" name="full_name" class="modern-input" value="{{ full_name if full_name else '' }}" placeholder="e.g. Alex Morgan" required style="width: 100%; border: 2px solid #94a3b8; border-radius: 8px; padding: 12px; font-size: 0.95rem; font-weight: 600;">
+                    </div>
+
+                    <!-- Email Address + Send OTP Button -->
+                    <div class="input-group" style="margin-bottom: 1rem;">
+                        <label style="color: #0f172a; font-weight: 700; font-size: 0.9rem; margin-bottom: 6px; display: block;">Email Address (Requires Verification)</label>
+                        <div style="display: flex; gap: 8px;">
+                            <input type="email" id="emailInput" name="email" class="modern-input" value="{{ email if email else '' }}" placeholder="alex@example.com" required style="flex: 1; border: 2px solid #94a3b8; border-radius: 8px; padding: 12px; font-size: 0.95rem; font-weight: 600;">
+                            <button type="button" id="btnSendOtp" class="btn-get-otp" onclick="handleSendOtp()">
+                                <span id="btnSendOtpText">Get OTP</span>
+                                <i id="btnSendOtpIcon" class="fa-solid fa-paper-plane"></i>
+                            </button>
+                        </div>
+                        <small style="color: #64748b; font-size: 0.8rem; margin-top: 4px; display: block;">A 6-digit verification code will be dispatched to this email.</small>
+                    </div>
+
+                    <!-- OTP Verification Section -->
+                    <div id="otpSection" class="otp-section-card {% if otp_sent %}active{% endif %}" style="display: {% if otp_sent %}block{% else %}none{% endif %};">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <label style="color: #0f172a; font-weight: 800; font-size: 0.92rem; margin: 0;">
+                                <i class="fa-solid fa-key" style="color: #2563eb;"></i> Enter 6-Digit OTP
+                            </label>
+                            <span id="otpTimerDisplay" class="otp-timer-text">
+                                <i class="fa-regular fa-clock"></i> <span id="timerCountdown">10:00</span>
+                            </span>
+                        </div>
+                        <input type="text" id="otpInput" name="otp" class="modern-input otp-input-control" placeholder="______" maxlength="6" pattern="[0-9]{6}" autocomplete="one-time-code" style="width: 100%; border-radius: 8px; padding: 10px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
+                            <small style="color: #64748b; font-size: 0.8rem;">Didn't receive email? Check spam or resend.</small>
+                            <button type="button" id="btnResendOtp" onclick="handleSendOtp()" style="background: none; border: none; color: #2563eb; font-weight: 700; font-size: 0.82rem; cursor: pointer; text-decoration: underline; padding: 0;">
+                                Resend OTP
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Phone Number -->
+                    <div class="input-group" style="margin-bottom: 1rem;">
+                        <label style="color: #0f172a; font-weight: 700; font-size: 0.9rem; margin-bottom: 6px; display: block;">Phone Number</label>
+                        <input type="tel" name="ph_number" class="modern-input" value="{{ ph_number if ph_number else '' }}" placeholder="+1 (555) 000-0000" style="width: 100%; border: 2px solid #94a3b8; border-radius: 8px; padding: 12px; font-size: 0.95rem; font-weight: 600;">
+                    </div>
+
+                    <!-- Password -->
+                    <div class="input-group" style="margin-bottom: 1.5rem;">
+                        <label style="color: #0f172a; font-weight: 700; font-size: 0.9rem; margin-bottom: 6px; display: block;">Password</label>
+                        <div style="position: relative; display: flex; align-items: center;">
+                            <input type="password" id="passwordInput" name="password" class="modern-input" placeholder="Create a secure password" required minlength="6" style="width: 100%; border: 2px solid #94a3b8; border-radius: 8px; padding: 12px; padding-right: 42px; font-size: 0.95rem; font-weight: 600;">
+                            <button type="button" onclick="togglePasswordVisibility('passwordInput', this)" title="Toggle password visibility" style="position: absolute; right: 12px; background: transparent; border: none; cursor: pointer; color: #64748b; font-size: 1.1rem; padding: 4px; display: flex; align-items: center; justify-content: center; z-index: 10;">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" id="btnSubmitForm" class="btn btn-primary w-full glow-btn" style="background: #2563eb; color: #ffffff; font-weight: 800; font-size: 1.05rem; padding: 14px; border-radius: 10px; width: 100%; border: none; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px;">
+                        <span>Verify & Create Account</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </form>
+
+                <div style="text-align: center; margin-top: 1.5rem;">
+                    <a href="/login" style="color: #0f172a; font-weight: 800; font-size: 0.92rem; text-decoration: underline;">
+                        Already registered? Log in here
+                    </a>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        function togglePasswordVisibility(inputId, btn) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            const icon = btn.querySelector('i');
+            if (input.type === 'password') {
+                input.type = 'text';
+                if (icon) {
+                    icon.className = 'fa-solid fa-eye-slash';
+                    icon.style.color = '#2563eb';
+                }
+            } else {
+                input.type = 'password';
+                if (icon) {
+                    icon.className = 'fa-solid fa-eye';
+                    icon.style.color = '#64748b';
+                }
+            }
+        }
+
+        let countdownInterval = null;
+
+        function showAlert(message, type = 'error') {
+            const box = document.getElementById('alertBox');
+            const msg = document.getElementById('alertMsg');
+            const icon = document.getElementById('alertIcon');
+            
+            box.style.display = 'flex';
+            box.className = 'auth-alert-box ' + (type === 'success' ? 'auth-alert-success' : type === 'info' ? 'auth-alert-info' : 'auth-alert-error');
+            icon.className = 'fa-solid ' + (type === 'success' ? 'fa-circle-check' : type === 'info' ? 'fa-circle-info' : 'fa-circle-exclamation');
+            msg.textContent = message;
+        }
+
+        function validateEmailSyntax(email) {
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(String(email).toLowerCase());
+        }
+
+        function startOtpTimer(durationSeconds = 600) {
+            clearInterval(countdownInterval);
+            let remaining = durationSeconds;
+            const timerSpan = document.getElementById('timerCountdown');
+            const resendBtn = document.getElementById('btnResendOtp');
+            if (resendBtn) resendBtn.disabled = true;
+
+            countdownInterval = setInterval(() => {
+                remaining--;
+                if (remaining <= 0) {
+                    clearInterval(countdownInterval);
+                    timerSpan.textContent = 'Expired';
+                    if (resendBtn) resendBtn.disabled = false;
+                } else {
+                    const mins = Math.floor(remaining / 60);
+                    const secs = remaining % 60;
+                    timerSpan.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+                }
+            }, 1000);
+        }
+
+        async function handleSendOtp() {
+            const emailInput = document.getElementById('emailInput');
+            const fullNameInput = document.getElementById('fullNameInput');
+            const btn = document.getElementById('btnSendOtp');
+            const btnText = document.getElementById('btnSendOtpText');
+            const btnIcon = document.getElementById('btnSendOtpIcon');
+            const otpSection = document.getElementById('otpSection');
+            const otpInput = document.getElementById('otpInput');
+
+            const email = emailInput.value.trim();
+            const fullName = fullNameInput ? fullNameInput.value.trim() : '';
+
+            if (!email) {
+                showAlert('Please enter your email address first.', 'error');
+                emailInput.focus();
+                return;
+            }
+
+            if (!validateEmailSyntax(email)) {
+                showAlert('Please enter a valid email format (e.g. name@domain.com).', 'error');
+                emailInput.focus();
+                return;
+            }
+
+            // Disable button & show spinner
+            btn.disabled = true;
+            btnText.textContent = 'Sending...';
+            btnIcon.className = 'fa-solid fa-spinner fa-spin';
+            showAlert('Sending 6-digit verification code to ' + email + '...', 'info');
+
+            try {
+                const response = await fetch('/api/auth/send-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: email, full_name: fullName })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    showAlert(data.message || 'Verification code sent to your inbox! Check your spam folder if needed.', 'success');
+                    otpSection.style.display = 'block';
+                    otpSection.classList.add('active');
+                    otpInput.required = true;
+                    otpInput.focus();
+                    startOtpTimer(600);
+                    btnText.textContent = 'OTP Sent';
+                    btnIcon.className = 'fa-solid fa-check';
+                } else {
+                    const errorDetail = data.detail || data.message || 'Failed to dispatch verification email.';
+                    showAlert(errorDetail, 'error');
+                    btn.disabled = false;
+                    btnText.textContent = 'Get OTP';
+                    btnIcon.className = 'fa-solid fa-paper-plane';
+                }
+            } catch (err) {
+                showAlert('Network error connecting to server. Please try again.', 'error');
+                btn.disabled = false;
+                btnText.textContent = 'Get OTP';
+                btnIcon.className = 'fa-solid fa-paper-plane';
+            }
+        }
+
+        document.getElementById('signupForm').addEventListener('submit', function(e) {
+            const otpInput = document.getElementById('otpInput');
+            const otpSection = document.getElementById('otpSection');
+
+            if (otpSection.style.display === 'none' || !otpInput.value.trim()) {
+                e.preventDefault();
+                showAlert('Please click "Get OTP" to verify your email address before creating your account.', 'error');
+                handleSendOtp();
+            }
+        });
+    </script>
+</body>
+</html>

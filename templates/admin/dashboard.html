@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Command Center - AI Platform</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+{% set s = stats if (stats is defined and stats) else {} %}
+
+<div class="app-container wide">
+    <div class="dashboard-wrapper">
+
+        <!-- Admin Hero Header -->
+        <div class="dashboard-hero">
+            <div class="hero-greeting">
+                <h1>Welcome back, <span class="highlight">{{ name|default('System Admin') }}</span>! 🛡️</h1>
+                <p>Platform Management & Intelligence Center</p>
+                <div class="hero-badges">
+                    <span class="tier-badge pro"><i class="fa-solid fa-user-shield"></i> SUPER ADMIN ACTIVE</span>
+                    <span class="member-since"><i class="fa-solid fa-server"></i> System Status: Operational</span>
+                </div>
+            </div>
+            <div class="hero-actions">
+                <a href="/learning/admin" class="btn btn-primary glow-btn">
+                    <i class="fa-solid fa-sliders"></i> Admin Console
+                </a>
+                <a href="/learning/history" class="btn btn-outline">
+                    <i class="fa-solid fa-clock-rotate-left"></i> Full Audit Trail
+                </a>
+            </div>
+        </div>
+
+        <!-- 4 Top Admin KPI Cards -->
+        <div class="kpi-grid">
+            <!-- Metric 1: Total Platform Users -->
+            <div class="kpi-card">
+                <div class="kpi-icon-box kpi-icon-indigo">
+                    <i class="fa-solid fa-users"></i>
+                </div>
+                <div class="kpi-info">
+                    <div class="kpi-label">Total Platform Users</div>
+                    <div class="kpi-val">{{ s.total_users|default(0) }}</div>
+                    <div class="kpi-sub">
+                        <span class="val-green"><i class="fa-solid fa-user-check"></i> Registered Accounts</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Metric 2: Total Resumes Parsed -->
+            <div class="kpi-card">
+                <div class="kpi-icon-box kpi-icon-emerald">
+                    <i class="fa-solid fa-file-invoice"></i>
+                </div>
+                <div class="kpi-info">
+                    <div class="kpi-label">Resumes Analyzed</div>
+                    <div class="kpi-val">{{ s.total_resumes|default(0) }}</div>
+                    <div class="kpi-sub">
+                        <span class="kpi-icon-indigo"><i class="fa-solid fa-chart-line"></i> Total ATS Scans</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Metric 3: Published Courses -->
+            <div class="kpi-card">
+                <div class="kpi-icon-box kpi-icon-amber">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                </div>
+                <div class="kpi-info">
+                    <div class="kpi-label">Active Courses</div>
+                    <div class="kpi-val">{{ s.total_courses|default(0) }}</div>
+                    <div class="kpi-sub">
+                        <span class="val-green"><i class="fa-solid fa-video"></i> Published Catalog</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Metric 4: Pro Members -->
+            <div class="kpi-card">
+                <div class="kpi-icon-box kpi-icon-purple">
+                    <i class="fa-solid fa-crown"></i>
+                </div>
+                <div class="kpi-info">
+                    <div class="kpi-label">Pro Subscribers</div>
+                    <div class="kpi-val">{{ s.pro_users_count|default(0) }}</div>
+                    <div class="kpi-sub">
+                        <span><i class="fa-solid fa-certificate"></i> {{ s.total_certificates|default(0) }} Certs Issued</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Metric 5: Admin Account Revenue -->
+            <div class="kpi-card">
+                <div class="kpi-icon-box" style="background: rgba(16, 185, 129, 0.15); color: #059669;">
+                    <i class="fa-solid fa-wallet"></i>
+                </div>
+                <div class="kpi-info">
+                    <div class="kpi-label">Admin Revenue (View)</div>
+                    <div class="kpi-val" style="color: #059669;">{{ s.formatted_revenue|default('₹0.00') }}</div>
+                    <div class="kpi-sub">
+                        <span class="val-green"><i class="fa-solid fa-chart-line"></i> FREE100: ₹999 | DISC1500: ₹1500</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Balanced 2-Column Content Grid -->
+        <div class="dashboard-layout">
+            
+            <!-- Left Column: User Management & Recent Uploads -->
+            <div class="left-col">
+                
+                <!-- Card 1: Registered Users Overview -->
+                <div class="dash-card">
+                    <div class="dash-card-header">
+                        <h3 class="dash-card-title">
+                            <i class="fa-solid fa-user-group kpi-icon-indigo"></i> Platform Users & Candidates
+                        </h3>
+                        <a href="/learning/admin" class="dash-card-action">
+                            Manage All <i class="fa-solid fa-arrow-right"></i>
+                        </a>
+                    </div>
+
+                    <div class="course-list">
+                        {% if recent_users %}
+                            {% for u in recent_users[:5] %}
+                            <div class="course-rec-item">
+                                <div>
+                                    <div class="course-title-text">{{ u.full_name or 'User' }}</div>
+                                    <div class="course-module-text">
+                                        <i class="fa-regular fa-envelope"></i> {{ u.email }} • <span class="val-green">{{ u.role|upper }}</span>
+                                    </div>
+                                </div>
+                                <div>
+                                    {% if u.is_subscribed %}
+                                    <span class="tier-badge pro"><i class="fa-solid fa-crown"></i> PRO</span>
+                                    {% else %}
+                                    <span class="tier-badge free">FREE</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <p class="empty-state-text">No users registered yet.</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Card 2: Platform Course Library Stats -->
+                <div class="dash-card">
+                    <div class="dash-card-header">
+                        <h3 class="dash-card-title">
+                            <i class="fa-solid fa-book-open kpi-icon-indigo"></i> Published Engineering Courses
+                        </h3>
+                        <a href="/learning/admin" class="dash-card-action">
+                            Add Course <i class="fa-solid fa-plus"></i>
+                        </a>
+                    </div>
+
+                    <div class="course-list">
+                        {% if courses_list %}
+                            {% for c in courses_list[:4] %}
+                            <div class="course-rec-item">
+                                <div>
+                                    <div class="course-title-text">{{ c.title }}</div>
+                                    <div class="course-module-text">
+                                        <i class="fa-solid fa-layer-group"></i> {{ c.difficulty_level or 'Intermediate' }} • <i class="fa-solid fa-circle-play"></i> Active
+                                    </div>
+                                </div>
+                                <a href="/learning/dashboard" class="btn btn-outline">Inspect</a>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <p class="empty-state-text">No courses published yet.</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Right Column: Admin Operations & System Control -->
+            <div class="right-col">
+                
+                <!-- Card 3: Admin Quick Actions Hub -->
+                <div class="dash-card">
+                    <div class="dash-card-header">
+                        <h3 class="dash-card-title">
+                            <i class="fa-solid fa-gears kpi-icon-amber"></i> Admin Operations
+                        </h3>
+                    </div>
+                    <div class="quick-actions-grid">
+                        <a href="/extract_page" class="quick-tile" style="border: 1.5px solid rgba(16, 185, 129, 0.3); background: rgba(16, 185, 129, 0.04);">
+                            <div class="quick-tile-icon kpi-icon-emerald">
+                                <i class="fa-solid fa-cloud-arrow-up"></i>
+                            </div>
+                            <h4 class="quick-tile-title">Upload Resume</h4>
+                            <p class="quick-tile-desc">Extract text & ATS parse</p>
+                        </a>
+
+                        <a href="/learning/admin" class="quick-tile">
+                            <div class="quick-tile-icon kpi-icon-indigo">
+                                <i class="fa-solid fa-folder-plus"></i>
+                            </div>
+                            <h4 class="quick-tile-title">Manage Courses</h4>
+                            <p class="quick-tile-desc">Upload video & PDF notes</p>
+                        </a>
+
+                        <a href="/learning/admin" class="quick-tile">
+                            <div class="quick-tile-icon kpi-icon-emerald">
+                                <i class="fa-solid fa-user-shield"></i>
+                            </div>
+                            <h4 class="quick-tile-title">User Roles</h4>
+                            <p class="quick-tile-desc">Promote/modify users</p>
+                        </a>
+
+                        <a href="/learning/history" class="quick-tile">
+                            <div class="quick-tile-icon kpi-icon-amber">
+                                <i class="fa-solid fa-clipboard-list"></i>
+                            </div>
+                            <h4 class="quick-tile-title">Audit Logs</h4>
+                            <p class="quick-tile-desc">Inspect system events</p>
+                        </a>
+
+                        <a href="/analyze_page" class="quick-tile">
+                            <div class="quick-tile-icon kpi-icon-purple">
+                                <i class="fa-solid fa-microchip"></i>
+                            </div>
+                            <h4 class="quick-tile-title">AI Engine</h4>
+                            <p class="quick-tile-desc">Test model parser</p>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Card 4: Platform Missing Skill Trends -->
+                <div class="dash-card">
+                    <div class="dash-card-header">
+                        <h3 class="dash-card-title">
+                            <i class="fa-solid fa-chart-pie kpi-icon-purple"></i> Top Market Skill Gaps
+                        </h3>
+                    </div>
+                    
+                    <div class="skill-chip-group">
+                        {% for sk in top_skills|default(['Docker', 'FastAPI', 'Kubernetes', 'PostgreSQL', 'Redis', 'CI/CD', 'System Design', 'React']) %}
+                        <span class="skill-chip">
+                            <i class="fa-solid fa-bolt kpi-icon-amber"></i> {{ sk }}
+                        </span>
+                        {% endfor %}
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Full-Width Bottom Card: System-Wide Audit Activity Stream -->
+        <div class="dash-card-full">
+            <div class="dash-card-header">
+                <h3 class="dash-card-title">
+                    <i class="fa-solid fa-clock-rotate-left kpi-icon-indigo"></i> Platform System Logs & Activity Feed
+                </h3>
+                <a href="/learning/history" class="dash-card-action">
+                    Full Log History <i class="fa-solid fa-arrow-right"></i>
+                </a>
+            </div>
+            <div class="activity-grid">
+                {% for act in activities %}
+                <div class="activity-card">
+                    <div class="activity-icon-badge">
+                        <i class="fa-solid fa-terminal"></i>
+                    </div>
+                    <div>
+                        <div class="activity-text">{{ act.action }}</div>
+                        <div class="activity-time">{{ act.timestamp }}</div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>

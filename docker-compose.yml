@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+      - ./uploads:/app/uploads
+      - ./resume.db:/app/resume.db
+      - ./local_dev.db:/app/local_dev.db
+    environment:
+      - GROQ_API_KEY=${GROQ_API_KEY}
+    env_file:
+      - .env

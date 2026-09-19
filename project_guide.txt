@@ -1,0 +1,223 @@
+================================================================================
+          AI RESUME ANALYZER & MICRO-LEARNING PLATFORM
+               Project Architecture & Setup Guide
+================================================================================
+
+1. PROJECT OVERVIEW
+--------------------------------------------------------------------------------
+The AI Resume Analyzer & Micro-Learning Platform is a comprehensive web 
+application built with FastAPI, Python, Machine Learning (Scikit-Learn), 
+and Modern Web Interfaces. 
+
+Key Capabilities:
+  - 📄 Resume Upload & ATS Match Scoring (TF-IDF & Cosine Similarity)
+  - 🎯 Automatic Missing Skill Detection & Job Recommendations
+  - 🎓 Dynamic AI Micro-Course & Video Script Generation
+  - ✍️ Interactive Skill Assessment Quizzes & Passing Score Checks
+  - 📜 Automatic Printable PDF Certificate Generation with UUID Verification
+  - 💳 Tiered Subscriptions (Basic ₹99, Pro ₹999, VIP ₹4,999, Coupon FREE99)
+  - 🛡️ Complete Executive Admin Panel for User & Payment Audit
+
+
+2. VISUAL SYSTEM FLOWCHARTS
+--------------------------------------------------------------------------------
+
+[A] MAIN HIGH-LEVEL SYSTEM FLOWCHART:
+
+    +-------------------+       +-----------------------+       +-------------------+
+    |   Candidate /     | ----> |    FastAPI Main App   | ----> | Admin Control     |
+    |   Learner User    |       |       (main.py)       |       | Panel (admin.html)|
+    +-------------------+       +-----------------------+       +-------------------+
+              |                             |
+              v                             v
+    +-------------------+       +-----------------------+
+    | Resume Analyzer   |       | Learning Platform &   |
+    | (utils/analyzer)  |       | Interactive AI Player |
+    +-------------------+       +-----------------------+
+              |                             |
+              v                             v
+    +-------------------+       +-----------------------+
+    | TF-IDF & Cosine   |       | Quizzes & ReportLab   |
+    | Skill Matcher     |       | PDF Certificate Engine|
+    +-------------------+       +-----------------------+
+              |                             |
+              +--------------+--------------+
+                             |
+                             v
+                +-------------------------+
+                | SQLite / Supabase DB    |
+                | & Cloud Storage Buckets |
+                +-------------------------+
+
+
+[B] RESUME ANALYSIS & SKILL MATCHING FLOW:
+
+    [ User Uploads Resume ] 
+               │
+               ▼
+    [ utils/extractor.py ] ──► (Extract Text via pdfplumber / pypdf / Tesseract OCR)
+               │
+               ▼
+    [ utils/skill_normalizer.py ] ──► (Extract & Normalize Canonical Skill Keywords)
+               │
+               ▼
+    [ utils/analyzer.py ] ──► (TF-IDF Vectorization & Cosine Similarity Score %)
+               │
+               ▼
+    [ db.py ] ──► (Save Resume Analysis & Display Recommended AI Micro-Courses)
+
+
+[C] QUIZ & PDF CERTIFICATE FLOW:
+
+    [ Candidate Completes 5 Quiz Questions ]
+               │
+               ▼
+    [ POST /api/quizzes/submit ] ──► (Evaluates Answers & Saves Score in DB)
+               │
+         ┌─────┴─────┐
+         │ Score % ? │
+         └─────┬─────┘
+               │
+       ┌───────┴────────┐
+       ▼                ▼
+    [ >= 25% PASS ]   [ < 25% FAIL ]
+       │                │
+       ▼                ▼
+  Generate PDF     Prompt User to
+  Certificate      Retake Quiz
+  (ReportLab)
+       │
+       ▼
+  Upload PDF to
+  Supabase / Local
+
+
+[D] PAYMENT & TIERED SUBSCRIPTION FLOW:
+
+    [ User Selects Plan / Enters Coupon (FREE99) ]
+               │
+               ▼
+    [ POST /api/subscriptions/coupons/validate ] ──► (Validates Discount)
+               │
+         ┌─────┴──────────────────┐
+         │ Select Payment Method  │
+         └─────┬──────────────────┘
+               │
+       ┌───────┴──────────────────┐
+       ▼                          ▼
+  [ Direct UPI QR ]       [ Razorpay Gateway ]
+  (Scan & Submit UTR)     (Cards/NetBanking)
+       │                          │
+       └───────────┬──────────────┘
+                   │
+                   ▼
+    [ Record Subscription in DB ] ──► (Activate Subscription & Unlock Courses)
+
+
+3. SOFTWARE & HARDWARE REQUIREMENTS
+--------------------------------------------------------------------------------
+System Requirements:
+  - OS: Windows 10/11, Linux (Ubuntu 20.04+), or macOS 12+
+  - Python: Version 3.10 or 3.11 (64-bit)
+  - Disk Space: 10 GB Free Disk Space
+  - RAM: 8 GB Minimum (16 GB Recommended)
+
+Python Packages (requirements.txt):
+  - Web Server: fastapi, uvicorn, jinja2, python-multipart
+  - Database & ORM: sqlalchemy, pydantic, python-dotenv
+  - Machine Learning: scikit-learn, sentence-transformers, faiss-cpu, langchain
+  - File Parsers & OCR: pdfplumber, pypdf, python-docx, pytesseract
+  - PDF Generation: reportlab
+  - Security: python-jose, bcrypt
+
+
+4. API KEYS CREATION GUIDES
+--------------------------------------------------------------------------------
+1. GOOGLE GEMINI API KEY:
+   - Visit: https://aistudio.google.com/
+   - Click "Get API key" -> "Create API key in new project".
+   - Copy key and set: GEMINI_API_KEY="AIzaSy..." in .env
+
+2. GROQ CLOUD API KEY:
+   - Visit: https://console.groq.com/
+   - Go to API Keys -> Create API Key.
+   - Copy key and set: GROQ_API_KEY="gsk_..." in .env
+
+3. COHERE API KEY:
+   - Visit: https://dashboard.cohere.com/
+   - Copy API key and set: COHERE_API_KEY="cohere_..." in .env
+
+4. SUPABASE DATABASE & STORAGE SETUP:
+   - Visit: https://supabase.com/
+   - Create a project and copy Database URL & Service Role Key.
+   - Create Storage Buckets: images, videos, files, certificates.
+   - Set in .env:
+       DATABASE_URL="sqlite:///./local_dev.db" (or PostgreSQL URL)
+       STORAGE_PROVIDER=supabase
+       SUPABASE_URL="https://your_project.supabase.co"
+       SUPABASE_KEY="your_supabase_service_role_key"
+
+5. RAZORPAY MERCHANT GATEWAY:
+   - Visit: https://dashboard.razorpay.com/
+   - Go to Settings -> API Keys -> Generate Key.
+   - Set in .env:
+       RAZORPAY_KEY_ID="rzp_test_..."
+       RAZORPAY_KEY_SECRET="..."
+
+6. GMAIL SMTP APP PASSWORD:
+   - Visit Google Account Security -> Enable 2-Step Verification.
+   - Search "App Passwords" -> Create "CareerPro Mailer".
+   - Set 16-character code in .env:
+       SMTP_USER="your_email@gmail.com"
+       SMTP_PASSWORD="your_16_char_app_password"
+
+
+5. FILE DIRECTORY & MODULE CONNECTIONS
+--------------------------------------------------------------------------------
+project-root/
+│
+├── main.py                     # Entry point, FastAPI app, routes & Jinja views
+├── db.py                       # Core database utilities & CRUD operations
+├── requirements.txt            # Python dependencies
+├── .env                        # Environment variables & API keys
+│
+├── app/
+│   ├── api/                    # API Endpoints (auth, courses, quizzes, subscriptions)
+│   ├── core/                   # Security & database sessions
+│   ├── models/                 # SQLAlchemy Models (User, Subscription, Certificate)
+│   ├── schemas/                # Pydantic data schemas
+│   └── services/               # Services (payment, certificate, AI, progress)
+│
+├── utils/
+│   ├── analyzer.py             # TF-IDF & Cosine Similarity ML engine
+│   ├── extractor.py            # PDF, DOCX, TXT & Tesseract OCR extractor
+│   ├── skill_normalizer.py     # Skill taxonomy & canonical aliases
+│   └── supabase_storage.py     # Cloud file storage uploader
+│
+└── templates/
+    ├── admin/admin.html        # Executive Admin Dashboard
+    ├── common/                 # Login & Signup pages
+    ├── learning/player.html    # Interactive AI Video Player & Micro-Course UI
+    └── user/analysis.html      # Resume Analysis Result Page
+
+
+6. QUICK SETUP & RUN INSTRUCTIONS
+--------------------------------------------------------------------------------
+STEP 1: Open PowerShell / Terminal in project directory:
+        cd c:\Users\TruProjects\Documents\test
+
+STEP 2: Create & Activate Virtual Environment:
+        python -m venv venv
+        .\venv\Scripts\Activate.ps1
+
+STEP 3: Install Dependencies:
+        pip install -r requirements.txt
+
+STEP 4: Run Application:
+        uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+STEP 5: Open Web Browser:
+        - Application Homepage: http://localhost:8000
+        - API Docs (Swagger):  http://localhost:8000/docs
+        - Admin Panel:         http://localhost:8000/learning/admin
+================================================================================

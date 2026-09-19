@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analyze Match - AI Resume Analyzer Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="app-container wide">
+    <header class="app-header small-header">
+        <h1><i class="fa-solid fa-wand-magic-sparkles kpi-icon-indigo"></i> Analyze Job Skills</h1>
+        <p>Match your extracted resume against a Job Description using Machine Learning.</p>
+    </header>
+
+    <main class="dashboard-wrapper">
+        <section class="dash-card">
+            {% if error %}
+                <div class="empty-state-box">
+                    <div class="empty-state-icon val-red">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+                    <h4 class="empty-state-title">{{ error }}</h4>
+                    <div class="resume-toolbar">
+                        <a href="/extract_page" class="btn btn-primary">Go to Extract Text</a>
+                    </div>
+                </div>
+            {% else %}
+                <form id="analyzeForm" action="/analyze" method="POST" onsubmit="showLoading()">
+                    <div class="input-group">
+                        <label class="kpi-label">Enter Target Job Description / Required Skills</label>
+                        <textarea name="job_desc" placeholder="e.g. We are looking for a Python developer with SQL experience, FastAPI, Golang, Docker, React..." class="modern-input" rows="8" required></textarea>
+                    </div>
+                    <div class="resume-toolbar">
+                        <button type="submit" class="btn btn-primary w-full glow-btn">
+                            Run Machine Learning Analysis <i class="fa-solid fa-microchip"></i>
+                        </button>
+                    </div>
+                </form>
+
+                <div id="loadingOverlay" style="display: none; text-align: center; padding: 3rem 1rem;">
+                    <i class="fa-solid fa-gear fa-spin kpi-icon-indigo" style="font-size: 3.5rem; margin-bottom: 1.5rem;"></i>
+                    <h3 class="empty-state-title">Local AI is analyzing your resume...</h3>
+                    <p class="empty-state-text">Parsing skills, extracting job requirements, and calculating your ATS match grade.</p>
+                </div>
+            {% endif %}
+        </section>
+    </main>
+</div>
+
+<script>
+    function showLoading() {
+        document.getElementById('analyzeForm').style.display = 'none';
+        document.getElementById('loadingOverlay').style.display = 'block';
+    }
+</script>
+</body>
+</html>

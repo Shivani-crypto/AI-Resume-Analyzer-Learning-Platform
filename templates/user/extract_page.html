@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload & Extract Resume - AI Resume Analyzer Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="app-container wide">
+    <header class="app-header small-header">
+        <h1><i class="fa-solid fa-cloud-arrow-up kpi-icon-indigo"></i> Upload Resume & Extract Text</h1>
+        <p>Upload your PDF or DOCX resume to parse text, extract skills, and run full AI ATS analysis.</p>
+    </header>
+
+    <main class="dashboard-wrapper">
+        <!-- 1. RESUME UPLOAD SECTION -->
+        <section class="dash-card" style="margin-bottom: 2rem;">
+            <div class="dash-card-header">
+                <h3 class="dash-card-title">
+                    <i class="fa-solid fa-file-arrow-up kpi-icon-emerald"></i> Select or Drag & Drop Resume File
+                </h3>
+            </div>
+            
+            <form action="/upload" method="POST" enctype="multipart/form-data" class="upload-form" style="padding: 1rem 0;">
+                <div class="drop-zone" id="dropZone" style="border: 2px dashed #cbd5e1; border-radius: 12px; padding: 2.5rem; text-align: center; background: rgba(248, 250, 252, 0.6); cursor: pointer; transition: all 0.3s ease;">
+                    <div style="font-size: 2.5rem; color: #6366f1; margin-bottom: 1rem;">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                    </div>
+                    <h4 style="margin: 0 0 0.5rem 0; font-size: 1.1rem; color: #1e293b;">Choose a resume file or drag it here</h4>
+                    <p style="color: #64748b; font-size: 0.85rem; margin-bottom: 1.25rem;">Supports PDF, DOCX, DOC, TXT (Up to 15MB)</p>
+                    
+                    <input type="file" id="resumeFileInput" name="resume" accept=".pdf,.docx,.doc,.txt,.png,.jpg" style="display: none;" onchange="handleFileSelected(this)">
+                    
+                    <button type="button" class="btn btn-primary" onclick="document.getElementById('resumeFileInput').click()" style="padding: 10px 24px;">
+                        <i class="fa-solid fa-folder-open"></i> Browse Resume File
+                    </button>
+                    <span id="selectedFileName" style="display: block; margin-top: 1rem; font-weight: 700; color: #10b981; font-size: 0.95rem;"></span>
+                </div>
+
+                <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end;">
+                    <button type="submit" id="btnUploadSubmit" class="btn btn-primary glow-btn" style="padding: 12px 28px; font-size: 1rem; border-radius: 8px; cursor: pointer;" disabled>
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> Upload & Extract Text
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <!-- 2. EXTRACTED CONTENT DISPLAY SECTION -->
+        <section class="dash-card">
+            <div class="dash-card-header">
+                <h3 class="dash-card-title">
+                    <i class="fa-solid fa-file-lines kpi-icon-indigo"></i> Extracted Resume Content
+                </h3>
+                {% if filename %}
+                <span class="activity-text"><i class="fa-solid fa-file-pdf val-red"></i> {{ filename }}</span>
+                {% endif %}
+            </div>
+
+            {% if error and not text %}
+            <div class="empty-state-box" style="padding: 2rem; text-align: center;">
+                <div class="empty-state-icon" style="font-size: 2rem; color: #94a3b8; margin-bottom: 0.5rem;">
+                    <i class="fa-solid fa-file-circle-question"></i>
+                </div>
+                <h4 class="empty-state-title" style="color: #64748b; margin: 0;">{{ error }}</h4>
+            </div>
+            {% elif text %}
+            <div class="text-container">
+                <pre class="extracted-text code-block" style="max-height: 400px; overflow-y: auto; background: #f8fafc; border: 1px solid #e2e8f0; padding: 1.25rem; border-radius: 10px; font-family: monospace; font-size: 0.9rem; line-height: 1.6; color: #1e293b; white-space: pre-wrap;">{{ text }}</pre>
+            </div>
+
+            <div class="resume-toolbar" style="margin-top: 1.5rem;">
+                <a href="/analyze_page" class="btn btn-primary glow-btn w-full" style="display: flex; justify-content: center; align-items: center; padding: 12px; font-size: 1rem; border-radius: 8px; text-decoration: none; color: white;">
+                    Continue to AI Skill Analysis <i class="fa-solid fa-arrow-right" style="margin-left: 8px;"></i>
+                </a>
+            </div>
+            {% else %}
+            <div class="empty-state-box" style="padding: 2rem; text-align: center;">
+                <p class="empty-state-text" style="color: #64748b;">No resume uploaded yet. Use the upload box above to select your resume.</p>
+            </div>
+            {% endif %}
+        </section>
+    </main>
+</div>
+
+<script>
+    function handleFileSelected(input) {
+        const file = input.files[0];
+        const fileNameSpan = document.getElementById('selectedFileName');
+        const submitBtn = document.getElementById('btnUploadSubmit');
+        const dropZone = document.getElementById('dropZone');
+
+        if (file) {
+            fileNameSpan.innerHTML = `<i class="fa-solid fa-circle-check"></i> Selected: ${file.name} (${(file.size / (1024*1024)).toFixed(2)} MB)`;
+            submitBtn.disabled = false;
+            dropZone.style.borderColor = '#10b981';
+            dropZone.style.background = 'rgba(16, 185, 129, 0.05)';
+        } else {
+            fileNameSpan.innerText = '';
+            submitBtn.disabled = true;
+            dropZone.style.borderColor = '#cbd5e1';
+            dropZone.style.background = 'rgba(248, 250, 252, 0.6)';
+        }
+    }
+
+    // Drag and Drop handling
+    const dropZone = document.getElementById('dropZone');
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropZone.style.borderColor = '#6366f1';
+            dropZone.style.background = 'rgba(99, 102, 241, 0.1)';
+        }, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropZone.style.borderColor = '#cbd5e1';
+            dropZone.style.background = 'rgba(248, 250, 252, 0.6)';
+        }, false);
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        if (files.length > 0) {
+            const input = document.getElementById('resumeFileInput');
+            input.files = files;
+            handleFileSelected(input);
+        }
+    });
+</script>
+</body>
+</html>

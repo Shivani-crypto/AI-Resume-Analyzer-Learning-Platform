@@ -1,0 +1,471 @@
+================================================================================
+     AI RESUME ANALYZER & MICRO-LEARNING PLATFORM
+     DOCKER STEP-BY-STEP DEPLOYMENT & COMPLETE CODEBASE GUIDE
+================================================================================
+
+TABLE OF CONTENTS:
+  1. Docker Overview & Architecture
+  2. Complete Docker Configuration Files (Full Code View & Explanation)
+  3. Step-by-Step Docker Build & Run Commands
+  4. Environment Configuration (.env) & API Key Creation Guides
+  5. Visual Flowcharts (System, Resume ML, Player, Quiz/Cert, Payment)
+  6. Comprehensive Module Code Walkthrough & File Connections
+  7. Docker Operations & Troubleshooting Command Reference
+
+
+================================================================================
+1. DOCKER OVERVIEW & ARCHITECTURE
+================================================================================
+Docker containerization packages the entire AI Resume Analyzer & Learning 
+Platform into an isolated, predictable, production-ready container environment.
+
+Key Docker Advantages in this Project:
+  - OS Independence: Bundles Linux Tesseract-OCR dependencies (`tesseract-ocr`,
+    `libtesseract-dev`) automatically so OCR text extraction works out-of-the-box.
+  - Zero Dependency Drift: Guarantees exact Python 3.10 runtime, C++ build tools
+    (`gcc`, `g++`), and pip dependencies across Windows, Mac, and Linux servers.
+  - Volume Persistence: Mounts `./local_dev.db`, `./resume.db`, and `./uploads`
+    to persist database records and candidate resumes across container restarts.
+  - Environment Injection: Injects API keys from `.env` directly into FastAPI.
+
+
+================================================================================
+2. COMPLETE DOCKER CONFIGURATION FILES (FULL CODE VIEW)
+================================================================================
+
+--------------------------------------------------------------------------------
+[FILE 1] Dockerfile (Location: ./Dockerfile)
+--------------------------------------------------------------------------------
+FULL CODE:
+
+FROM python:3.10-slim
+
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
+RUN apt-get update && apt-get install -y \
+    tesseract-ocr \
+    libtesseract-dev \
+    gcc \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+COPY requirements.txt .
+
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+EXPOSE 8000
+
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+
+LINE-BY-LINE EXPLANATION:
+  - Line 1: `FROM python:3.10-slim` - Uses lightweight Debian Linux base image with Python 3.10.
+  - Line 3-4: `ENV PYTHONDONTWRITEBYTECODE 1`, `PYTHONUNBUFFERED 1` - Prevents .pyc file generation and ensures realtime terminal log printing.
+  - Line 6-11: `RUN apt-get update && apt-get install -y tesseract-ocr libtesseract-dev gcc g++` - Installs Tesseract OCR engine for scanned PDF text extraction and GCC compilers for Scikit-Learn/FAISS.
+  - Line 13: `WORKDIR /app` - Sets working directory inside container.
+  - Line 15: `COPY requirements.txt .` - Copies dependency manifest first for Docker layer caching.
+  - Line 17: `RUN pip install --no-cache-dir -r requirements.txt` - Installs FastAPI, SQLAlchemy, Scikit-Learn, ReportLab without caching wheel files.
+  - Line 19: `COPY . .` - Copies remaining codebase files into container.
+  - Line 21: `EXPOSE 8000` - Documents port 8000 for FastAPI Uvicorn web server.
+  - Line 23: `CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]` - Server startup command listening on all interfaces.
+
+
+--------------------------------------------------------------------------------
+[FILE 2] docker-compose.yml (Location: ./docker-compose.yml)
+--------------------------------------------------------------------------------
+FULL CODE:
+
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+      - ./uploads:/app/uploads
+      - ./resume.db:/app/resume.db
+      - ./local_dev.db:/app/local_dev.db
+    environment:
+      - GROQ_API_KEY=${GROQ_API_KEY}
+    env_file:
+      - .env
+
+LINE-BY-LINE EXPLANATION:
+  - Line 1: `version: '3.8'` - Docker Compose file schema version.
+  - Line 4-5: `web: build: .` - Defines web service and builds image from current directory Dockerfile.
+  - Line 6-7: `ports: - "8000:8000"` - Maps host port 8000 to container port 8000.
+  - Line 8-12: `volumes:` - Binds local databases (`local_dev.db`, `resume.db`) and uploaded files directory (`./uploads`) so state is preserved.
+  - Line 13-16: `env_file: - .env` - Automatically loads all API keys (Gemini, Groq, Cohere, Supabase, Razorpay, SMTP) into container runtime environment.
+
+
+--------------------------------------------------------------------------------
+[FILE 3] .dockerignore (Location: ./.dockerignore)
+--------------------------------------------------------------------------------
+FULL CODE:
+
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+.env
+local_dev.db
+resume.db
+uploads/
+testcases/
+.git/
+.gitignore
+Dockerfile
+docker-compose.yml
+Output Video.mkv
+
+EXPLANATION:
+Excludes host-specific virtual environments, binary caches, large video assets, 
+and local database files from being baked into the Docker image build context, 
+keeping image size small and build times fast.
+
+
+================================================================================
+3. STEP-BY-STEP DOCKER BUILD & RUN INSTRUCTIONS
+================================================================================
+
+PREREQUISITE: Install Docker Desktop (Windows/Mac) or Docker Engine (Linux).
+
+--------------------------------------------------------------------------------
+STEP 1: Open PowerShell / Terminal in Project Root
+--------------------------------------------------------------------------------
+  cd c:\Users\TruProjects\Documents\test
+
+--------------------------------------------------------------------------------
+STEP 2: Verify Configuration Files
+--------------------------------------------------------------------------------
+  Ensure `.env`, `Dockerfile`, and `docker-compose.yml` exist in root directory.
+
+--------------------------------------------------------------------------------
+STEP 3: Build & Start Docker Container (Detached Mode)
+--------------------------------------------------------------------------------
+  docker-compose up --build -d
+
+  What happens:
+    - Docker builds image installing Debian packages + Tesseract OCR.
+    - Python pip dependencies install automatically.
+    - Web container launches listening on port 8000.
+
+--------------------------------------------------------------------------------
+STEP 4: Verify Container Status & Logs
+--------------------------------------------------------------------------------
+  docker-compose ps
+  docker-compose logs -f web
+
+--------------------------------------------------------------------------------
+STEP 5: Access the Live Application
+--------------------------------------------------------------------------------
+  - Application Web UI:        http://localhost:8000
+  - API Swagger Docs:          http://localhost:8000/docs
+  - ReDoc Specifications:      http://localhost:8000/redoc
+  - Executive Admin Panel:     http://localhost:8000/learning/admin
+
+
+================================================================================
+4. ENVIRONMENT CONFIGURATION (.env) & API KEY CREATION GUIDES
+================================================================================
+
+--------------------------------------------------------------------------------
+COMPLETE .env TEMPLATE FILE:
+--------------------------------------------------------------------------------
+ENVIRONMENT=development
+PORT=8000
+SECRET_KEY="c1a14651ec22243c55c29c9fba21ce2752751eac5b2c2b9d969fedb6e77d949a"
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=1440
+
+DATABASE_URL=sqlite:///./local_dev.db
+
+STORAGE_PROVIDER=supabase
+SUPABASE_URL="https://your_project.supabase.co"
+SUPABASE_KEY="your_supabase_service_role_key"
+SUPABASE_BUCKET_NAME=course_media
+
+GROQ_API_KEY="gsk_your_groq_api_key"
+COHERE_API_KEY="cohere_your_cohere_key"
+GEMINI_API_KEY="your_google_gemini_key"
+
+RAZORPAY_KEY_ID="rzp_test_your_key_id"
+RAZORPAY_KEY_SECRET="your_razorpay_secret"
+
+SMTP_HOST="smtp.gmail.com"
+SMTP_PORT=587
+SMTP_USER="your_email@gmail.com"
+SMTP_PASSWORD="your_16_char_app_password"
+SMTP_FROM_EMAIL="your_email@gmail.com"
+SMTP_FROM_NAME="Career Pro"
+SMTP_TLS=True
+
+UPI_ID="truprojects@upi"
+UPI_PAYEE_NAME="AI Career Pro"
+UPI_AMOUNT="999.00"
+
+--------------------------------------------------------------------------------
+API KEYS CREATION PROCEDURES:
+--------------------------------------------------------------------------------
+1. Google Gemini API Key:
+   - Go to: https://aistudio.google.com/
+   - Select "Get API key" -> "Create API key in new project".
+   - Copy key and set: GEMINI_API_KEY="..."
+
+2. Groq Cloud API Key:
+   - Go to: https://console.groq.com/
+   - Go to API Keys -> Create API Key.
+   - Copy key and set: GROQ_API_KEY="gsk_..."
+
+3. Cohere API Key:
+   - Go to: https://dashboard.cohere.com/
+   - Copy Trial/Production key and set: COHERE_API_KEY="cohere_..."
+
+4. Supabase Database & Storage:
+   - Go to: https://supabase.com/
+   - Create project -> Settings -> API -> Copy Project URL & service_role key.
+   - Storage -> Create Buckets: images, videos, files, certificates.
+
+5. Razorpay Merchant Gateway:
+   - Go to: https://dashboard.razorpay.com/
+   - Account & Settings -> API Keys -> Generate Key.
+   - Set RAZORPAY_KEY_ID & RAZORPAY_KEY_SECRET.
+
+6. Gmail SMTP App Password:
+   - Go to Google Account Security -> Enable 2-Step Verification.
+   - Search "App Passwords" -> Generate "CareerPro Mailer" key.
+   - Set 16-character string in SMTP_PASSWORD.
+
+
+================================================================================
+5. VISUAL SYSTEM FLOWCHARTS
+================================================================================
+
+[A] FULL DOCKER ARCHITECTURE FLOWCHART:
+
+  +-----------------------+     +-----------------------+     +-------------------+
+  | Host Browser Client   | --> | Container Port 8000   | --> | FastAPI Core App  |
+  | (http://localhost:8000)|    | (Docker Bridge Net)   |     |    (main.py)      |
+  +-----------------------+     +-----------------------+     +-------------------+
+                                                                        |
+            +-----------------------------------------------------------+
+            |
+            v
+  +-------------------------------------------------------------------------------+
+  | INSIDE DOCKER CONTAINER (/app)                                                |
+  |                                                                               |
+  | +-----------------------+   +-----------------------+   +-------------------+ |
+  | | Resume Extractor & OCR|   | ML Skill Match Engine |   | Interactive Player| |
+  | | (pdfplumber/pytesseract)  | (Scikit-Learn TF-IDF) |   | (player.html)     | |
+  | +-----------------------+   +-----------------------+   +-------------------+ |
+  |             |                           |                         |           |
+  |             v                           v                         v           |
+  | +-----------------------+   +-----------------------+   +-------------------+ |
+  | | ReportLab PDF Certs   |   | Subscription Gateway  |   | Admin Panel       | |
+  | | (certificate_service) |   | (payment_service.py)  |   | (admin.html)      | |
+  | +-----------------------+   +-----------------------+   +-------------------+ |
+  +-------------------------------------------------------------------------------+
+            |
+            +-------------------+-------------------+
+                                |                   |
+                                v                   v
+                     +--------------------+ +--------------------+
+                     | Mounted Local DBs  | | Supabase Cloud /   |
+                     | (local_dev.db)     | | External LLM APIs  |
+                     +--------------------+ +--------------------+
+
+
+[B] RESUME ANALYSIS & SCORING FLOWCHART:
+
+  [ Upload Resume PDF/DOCX/Image ] ──► [ utils/extractor.py (pdfplumber + OCR) ]
+                                                        │
+                                                        ▼
+  [ Scikit-Learn TF-IDF Vectorizer ] ◄── [ utils/skill_normalizer.py (Canonical Skills) ]
+                 │
+                 ▼
+  [ Cosine Similarity Score % ] ──► [ Save to DB & Render Course Recommendations ]
+
+
+[C] QUIZ & PRINTABLE PDF CERTIFICATE FLOWCHART:
+
+  [ User Submits 5 Quiz Answers ] ──► [ Evaluate Score % ]
+                                            │
+                                  ┌─────────┴─────────┐
+                                  ▼                   ▼
+                           [ Score >= 25% ]    [ Score < 25% ]
+                                  │                   │
+                                  ▼                   ▼
+                           [ ReportLab PDF ]   [ Retake Notice ]
+                                  │
+                                  ▼
+                           [ Save PDF & UUID ]
+
+
+================================================================================
+6. COMPREHENSIVE MODULE CODE WALKTHROUGH & FILE CONNECTIONS
+================================================================================
+
+--------------------------------------------------------------------------------
+MODULE 1: Main Application & Route Dispatcher (`main.py`)
+--------------------------------------------------------------------------------
+Location: `./main.py`
+Description: Central entrypoint configuring FastAPI instance, CORS middleware, 
+static directory mounts, Jinja2 template rendering, authentication checks, 
+and sub-router dispatches.
+
+Key Functions & Routes:
+  - `app = FastAPI(...)`: Initializes core app instance.
+  - `@app.post("/analyze-resume")`: Receives candidate resume upload, triggers 
+    `extract_text_from_file`, computes TF-IDF skill match score, and returns 
+    personalized course suggestions.
+  - `@app.get("/learning/admin")`: Renders Executive Admin Portal (`admin.html`).
+  - `@app.get("/admin/dashboard_data")`: Aggregates stats, candidate list, 
+    resumes breakdown, certificates ledger, and subscription packages for admin.
+
+Connections: Dispatches requests to `app/api/auth.py`, `app/api/courses.py`, 
+`app/api/quizzes.py`, `app/api/subscriptions.py`, and `utils/analyzer.py`.
+
+
+--------------------------------------------------------------------------------
+MODULE 2: Database Layer & Persistence Schemas (`db.py`, `app/models/`)
+--------------------------------------------------------------------------------
+Location: `./db.py` & `./app/models/`
+Description: Defines SQLAlchemy database engine, session management, and CRUD 
+utilities for SQLite and Supabase PostgreSQL.
+
+Key Models & Functions:
+  - `User`: Stores user credentials, email, password hash, role, and subscription status.
+  - `Subscription`: Stores subscription transactions, plan names, exact amount paid, 
+    applied coupon code, payment gateway method, and status.
+  - `get_all_users_extended()`: Returns full user management array enriched with 
+    detailed subscription `package_details` (plan name, coupon used, payable amount).
+
+Connections: Supplies database sessions to all FastAPI endpoints and background services.
+
+
+--------------------------------------------------------------------------------
+MODULE 3: Document Parsing & Text Extractor (`utils/extractor.py`)
+--------------------------------------------------------------------------------
+Location: `./utils/extractor.py`
+Description: Multi-tier text extraction utility:
+  1. `pdfplumber` for layout-preserved text extraction.
+  2. `pypdf` fallback for unformatted PDFs.
+  3. `pytesseract` OCR engine fallback for scanned image PDFs.
+  4. `python-docx` for `.docx` paragraphs & tabular resume layouts.
+
+Connections: Invoked by `main.py` when candidate uploads a resume file.
+
+
+--------------------------------------------------------------------------------
+MODULE 4: Skill Normalization & ML Match Engine (`utils/skill_normalizer.py`, `utils/analyzer.py`)
+--------------------------------------------------------------------------------
+Location: `./utils/skill_normalizer.py` & `./utils/analyzer.py`
+Description:
+  - Maintains `SKILLS_DB` taxonomy & canonical aliases (`SKILL_ALIASES`).
+  - Uses `TfidfVectorizer` and `cosine_similarity` from `scikit-learn` to calculate 
+    exact ATS resume score percentage against job description text.
+
+Connections: Called by `main.py` during resume analysis to determine missing skills.
+
+
+--------------------------------------------------------------------------------
+MODULE 5: Micro-Learning & Interactive AI Player (`app/api/courses.py`, `templates/learning/player.html`)
+--------------------------------------------------------------------------------
+Location: `./app/api/courses.py` & `./templates/learning/player.html`
+Description: Powers interactive 5-slide masterclass presentations, 1-minute 
+video demo scripts, downloadable PDF lecture notes, and a 24/7 AI tutor assistant.
+
+Connections: Consumes `app/services/ai_course_service.py` to stream AI responses.
+
+
+--------------------------------------------------------------------------------
+MODULE 6: Quiz Engine & PDF Certificate Generator (`app/api/quizzes.py`, `app/services/certificate_service.py`)
+--------------------------------------------------------------------------------
+Location: `./app/api/quizzes.py` & `./app/services/certificate_service.py`
+Description:
+  - Evaluates 5-question skill quizzes.
+  - Enforces minimum 25% passing score rule.
+  - Uses `ReportLab` to construct official PDF certificates complete with 
+    verification QR codes, student names, scores, and UUIDs.
+
+Connections: Uploads generated certificate PDFs to Supabase Storage and records link in DB.
+
+
+--------------------------------------------------------------------------------
+MODULE 7: Subscription & Payment Gateway Engine (`app/services/payment_service.py`, `app/api/subscriptions.py`)
+--------------------------------------------------------------------------------
+Location: `./app/services/payment_service.py` & `./app/api/subscriptions.py`
+Description:
+  - Supports 3 plan tiers (`Basic Pack ₹99`, `Pro Unlimited ₹999`, `VIP Lifetime ₹4,999`).
+  - Validates promo coupons (e.g. `FREE99`, `FREE100`, `DISCOUNT1500`).
+  - Implements dual payment options: Direct Merchant UPI QR Code (with 12-digit UTR 
+    verification) and official Razorpay Gateway.
+
+Connections: Updates `db.py` user subscription status and logs audit transaction details.
+
+
+--------------------------------------------------------------------------------
+MODULE 8: Unified Storage Provider (`utils/supabase_storage.py`)
+--------------------------------------------------------------------------------
+Location: `./utils/supabase_storage.py`
+Description: Handles REST API file uploads to public Supabase Storage buckets 
+(`images`, `videos`, `files`, `certificates`) with automatic local fallback.
+
+Connections: Invoked whenever resume files, course notes, or certificates are saved.
+
+
+--------------------------------------------------------------------------------
+MODULE 9: Executive Admin Panel (`templates/admin/admin.html`)
+--------------------------------------------------------------------------------
+Location: `./templates/admin/admin.html`
+Description: Full-featured executive dashboard offering:
+  - Candidate user management table with detailed subscription package pills 
+    (plan name, amount paid, coupon applied, payment method).
+  - Role toggling (User / System Admin) & Subscription grant/revocation.
+  - Certificate ledger inspection & direct PDF print links.
+  - System audit log monitoring.
+
+
+================================================================================
+7. DOCKER OPERATIONS & TROUBLESHOOTING COMMAND REFERENCE
+================================================================================
+
+--------------------------------------------------------------------------------
+COMMON DOCKER OPERATIONAL COMMANDS:
+--------------------------------------------------------------------------------
+1. Rebuild and restart containers after code changes:
+   docker-compose up --build -d
+
+2. View realtime application logs:
+   docker-compose logs -f web
+
+3. Stop running container services:
+   docker-compose down
+
+4. Execute shell inside running container:
+   docker-compose exec web bash
+
+5. Force clean rebuild (no cache):
+   docker-compose build --no-cache
+   docker-compose up -d
+
+--------------------------------------------------------------------------------
+TROUBLESHOOTING GOTCHAS:
+--------------------------------------------------------------------------------
+  - Port 8000 Conflict: If port 8000 is occupied on host, edit `docker-compose.yml` 
+    ports section to `"8080:8000"`.
+  - Database Permission Issue: Ensure local directory permissions allow container 
+    write access to `local_dev.db`.
+  - API Key Missing Notice: Verify `.env` file exists in root directory and contains 
+    valid key strings.
+================================================================================

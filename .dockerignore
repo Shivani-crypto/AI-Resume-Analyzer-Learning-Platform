@@ -1,0 +1,20 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+.env
+local_dev.db
+resume.db
+uploads/
+testcases/
+.git/
+.gitignore
+Dockerfile
+docker-compose.yml
+Output Video.mkv
+AI-Resume-Analyzer-and-Job-Matcher.rar
+report.pdf

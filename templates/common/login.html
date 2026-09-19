@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - AI Resume Analyzer Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', path='style.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            color: #000000;
+        }
+        .input-group label {
+            color: #000000 !important;
+            font-weight: 800 !important;
+            font-size: 0.92rem !important;
+            letter-spacing: 0.5px;
+        }
+        .modern-input {
+            color: #000000 !important;
+            font-weight: 600 !important;
+            font-size: 1rem !important;
+            border: 2px solid #334155 !important;
+            background: #ffffff !important;
+        }
+        .modern-input:focus {
+            border-color: #000000 !important;
+            box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.2) !important;
+        }
+        .btn-dark-admin {
+            background: #0f172a;
+            color: #ffffff !important;
+            border: 1px solid #1e293b;
+            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.3);
+            transition: all 0.2s ease;
+        }
+        .btn-dark-admin:hover {
+            background: #020617;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(15, 23, 42, 0.45);
+        }
+        .btn-home-nav {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #0f172a;
+            color: #ffffff !important;
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-weight: 700;
+            font-size: 0.88rem;
+            text-decoration: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            transition: all 0.2s ease;
+        }
+        .btn-home-nav:hover {
+            background: #1e293b;
+            transform: translateY(-1px);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container" style="max-width: 500px; margin-top: 6vh; padding: 0 16px;">
+        <!-- Top Bar Navigation with Home Button -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <a href="/" class="btn-home-nav">
+                <i class="fa-solid fa-house"></i> Home
+            </a>
+            <a href="/admin-login" class="btn-dark-admin" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 8px; font-weight: 700; font-size: 0.82rem; text-decoration: none;">
+                <i class="fa-solid fa-shield-halved"></i> Admin Login
+            </a>
+        </div>
+
+        <header class="app-header small-header" style="margin-bottom: 2rem;">
+            <h1 style="color: #000000; font-weight: 800; font-size: 2.2rem; letter-spacing: -0.5px;">
+                <i class="fa-solid fa-right-to-bracket"></i> Login
+            </h1>
+            <p style="color: #0f172a; font-weight: 600; font-size: 1rem; margin-top: 6px;">
+                Access your AI-powered job matching & learning tools.
+            </p>
+        </header>
+
+        <main class="dashboard" style="grid-template-columns: 1fr;">
+            <section class="card glass-panel w-full" style="border: 2px solid #cbd5e1; box-shadow: 0 15px 35px rgba(0,0,0,0.08); padding: 2rem;">
+                {% if success_msg %}
+                <div class="tag matched" style="margin-bottom: 1.25rem; text-align: center; background: #dcfce7; color: #166534; font-weight: 700; padding: 12px; border-radius: 8px; border: 1px solid #86efac; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                    <i class="fa-solid fa-circle-check"></i> {{ success_msg }}
+                </div>
+                {% endif %}
+                {% if error %}
+                <div class="tag missing" style="margin-bottom: 1.25rem; text-align: center; background: #fee2e2; color: #991b1b; font-weight: 700; padding: 10px; border-radius: 8px; border: 1px solid #fecaca;">
+                    <i class="fa-solid fa-circle-exclamation"></i> {{ error }}
+                </div>
+                {% endif %}
+                <form action="/login" method="POST" class="modern-form">
+                    <div class="input-group">
+                        <label>Email Address</label>
+                        <input type="email" name="email" class="modern-input" placeholder="you@example.com" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Password</label>
+                        <div style="position: relative; display: flex; align-items: center;">
+                            <input type="password" id="userLoginPassword" name="password" class="modern-input" placeholder="••••••••" required style="width: 100%; padding-right: 42px;">
+                            <button type="button" onclick="togglePasswordVisibility('userLoginPassword', this)" title="Toggle password visibility" style="position: absolute; right: 12px; background: transparent; border: none; cursor: pointer; color: #64748b; font-size: 1.1rem; padding: 4px; display: flex; align-items: center; justify-content: center; z-index: 10;">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-full glow-btn" style="background: #2563eb; color: #ffffff; font-weight: 800; font-size: 1.05rem; padding: 14px; border-radius: 10px; margin-top: 6px;">
+                        Login <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </form>
+
+                <script>
+                    function togglePasswordVisibility(inputId, btn) {
+                        const input = document.getElementById(inputId);
+                        if (!input) return;
+                        const icon = btn.querySelector('i');
+                        if (input.type === 'password') {
+                            input.type = 'text';
+                            if (icon) {
+                                icon.className = 'fa-solid fa-eye-slash';
+                                icon.style.color = '#2563eb';
+                            }
+                        } else {
+                            input.type = 'password';
+                            if (icon) {
+                                icon.className = 'fa-solid fa-eye';
+                                icon.style.color = '#64748b';
+                            }
+                        }
+                    }
+                </script>
+
+                <div style="text-align: center; margin-top: 1.5rem;">
+                    <a href="/signup" style="color: #000000; font-weight: 800; font-size: 0.95rem; text-decoration: underline;">
+                        Don't have an account? Sign up
+                    </a>
+                </div>
+
+                <!-- Admin Login in Dark -->
+                <div style="margin-top: 1.5rem; border-top: 1.5px solid #e2e8f0; padding-top: 1.25rem; text-align: center;">
+                    <span style="font-size: 0.85rem; color: #1e293b; font-weight: 700; display: block; margin-bottom: 10px;">
+                        Administrative Staff & Instructors:
+                    </span>
+                    <a href="/admin-login" class="btn-dark-admin" style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 12px; border-radius: 10px; font-weight: 800; text-decoration: none; font-size: 0.95rem;">
+                        <i class="fa-solid fa-shield-halved"></i> Admin Login (Dark Portal)
+                    </a>
+                </div>
+            </section>
+        </main>
+    </div>
+</body>
+</html>

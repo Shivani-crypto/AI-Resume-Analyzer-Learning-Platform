@@ -1,0 +1,93 @@
+================================================================================
+          GITHUB PUSH & 100% FREE LIVE HOSTING DEPLOYMENT GUIDE
+================================================================================
+
+--------------------------------------------------------------------------------
+PART 1: HOW TO PUSH YOUR PROJECT TO GITHUB
+--------------------------------------------------------------------------------
+
+STEP 1: Open Terminal / Git Bash
+  • For Git Bash (MINGW64), use forward slashes:
+      cd /c/Users/TruProjects/Documents/test
+  • For PowerShell / CMD, use:
+      cd C:\Users\TruProjects\Documents\test
+
+STEP 2: Verify Security (.env & Secrets)
+  • Our project `.gitignore` is already set up to NEVER upload `.env`, database 
+    `*.db` files, or temporary files to GitHub. Your secret keys will remain safe!
+
+STEP 3: Initialize Git & Create First Commit (Required to fix 'src refspec main' error)
+  Run these commands in order:
+
+    git init
+    git add .
+    git commit -m "Initial commit: AI Resume Analyzer & Micro-Learning Platform"
+    git branch -M main
+
+STEP 4: Set Remote URL & Push to GitHub
+  Copy and paste these commands into Git Bash:
+
+    git remote add origin https://github.com/Shivani-crypto/AI-Resume-Analyzer-Learning-Platform.git
+    
+    # (If origin already exists, use git remote set-url origin https://github.com/Shivani-crypto/AI-Resume-Analyzer-Learning-Platform.git)
+
+    git push -u origin main
+
+  🎉 Your project is now safely backed up and hosted on GitHub!
+
+
+--------------------------------------------------------------------------------
+PART 2: HOW TO HOST YOUR PROJECT LIVE FOR 100% FREE
+--------------------------------------------------------------------------------
+
+YES! You can host this entire FastAPI Python application LIVE on the internet 
+for 100% FREE using Render.com + Supabase Cloud Storage.
+
+RECOMMENDED PLATFORM: Render.com (Free Tier)
+  • 100% Free Web Service (750 free running hours/month)
+  • Free SSL Certificate (https://)
+  • Automatic continuous deployment whenever you push changes to GitHub
+
+STEP-BY-STEP RENDER DEPLOYMENT INSTRUCTIONS:
+
+1. Sign Up on Render:
+   • Go to https://render.com/
+   • Click "Sign Up" and choose "Sign in with GitHub".
+
+2. Create a New Web Service:
+   • Click the "+ New" button at top-right -> Select "Web Service".
+   • Choose "Build and deploy from a Git repository" -> Click Next.
+   • Connect your GitHub repository `ai-resume-analyzer-learning-platform`.
+
+3. Configure Service Settings:
+   • Name             : ai-resume-analyzer (or any name you like)
+   • Environment      : Python 3
+   • Region           : Choose nearest location (e.g. Singapore / Frankfurt / Oregon)
+   • Branch           : main
+   • Build Command    : pip install -r requirements.txt
+   • Start Command    : uvicorn main:app --host 0.0.0.0 --port $PORT
+   • Instance Type    : Select "Free" ($0 / month)
+
+4. Add Environment Variables (From your local .env file):
+   • Click "Advanced" -> "Add Environment Variable".
+   • Add the following keys and your values:
+       GROQ_API_KEY            = <your_groq_api_key>
+       SUPABASE_URL            = https://your-project.supabase.co
+       SUPABASE_SERVICE_ROLE_KEY = <your_supabase_key>
+       SECRET_KEY              = <your_random_secret_key>
+
+5. Launch Live Application:
+   • Click "Create Web Service".
+   • Render will pull your repository, install dependencies, and launch your server.
+   • In 2-3 minutes, you will get your live public HTTPS URL:
+     https://ai-resume-analyzer.onrender.com
+
+6. (Optional) Connect Free Supabase Database for Production:
+   • By default, local SQLite reset on container restart in free hosts.
+   • To preserve user data permanently online, set your `DATABASE_URL` in 
+     Render Environment Variables to your free Supabase PostgreSQL connection string:
+     postgresql://postgres:yourpass@db.yourproject.supabase.co:5432/postgres
+
+================================================================================
+                       END OF GITHUB & DEPLOYMENT GUIDE
+================================================================================

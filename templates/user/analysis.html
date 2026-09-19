@@ -1,0 +1,1189 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analysis Result - AI Resume Analyzer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+</head>
+
+<body class="dashboard-body">
+    <div class="app-container wide" style="margin-top: 2rem;">
+        <header class="app-header small-header">
+            <h1><i class="fa-solid fa-chart-pie"></i> Match Analysis Report</h1>
+            <p>Comprehensive overview of resume vs. job requirements.</p>
+        </header>
+
+        <div class="action-bar top-actions">
+            <a href="/analyze_page" class="btn btn-outline"><i class="fa-solid fa-arrow-left"></i> New Analysis</a>
+            <a href="/download" class="btn btn-primary"><i class="fa-solid fa-download"></i> Download PDF Report</a>
+        </div>
+
+
+        <main class="analysis-grid">
+            <!-- Score Card -->
+            <div class="card glass-panel text-center score-card">
+                <h2>Match Score</h2>
+                <div class="score-circle" style="background: conic-gradient(var(--success) {{ score }}%, #edf2f7 0);">
+                    <span class="score-value">{{ score }}%</span>
+                </div>
+            </div>
+
+            <!-- Visualization -->
+            <div class="card glass-panel chart-card text-center"
+                style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                <h2>Match Visualization</h2>
+                <div style="width: 250px; height: 250px; margin-top: 1rem;">
+                    <canvas id="matchChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Skills -->
+            <div class="card glass-panel skills-card col-span-full">
+                <div class="skills-section">
+                    <h3 class="success-text"><i class="fa-solid fa-check-circle"></i> Matched Skills</h3>
+                    <ul class="tag-list">
+                        {% for skill in resume_skills %}
+                        <li class="tag matched">{{ skill }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <hr class="divider">
+                <div class="skills-section">
+                    <h3 class="danger-text"><i class="fa-solid fa-xmark-circle"></i> Missing Skills (Click to Learn)
+                    </h3>
+                    <ul class="tag-list">
+                        {% for skill in missing_skills %}
+                        <li class="tag missing interactive-skill" onclick="showCourseDetails('{{ skill }}')">{{ skill }}
+                            <i class="fa-solid fa-arrow-pointer" style="font-size: 0.8rem; margin-left: 5px;"></i></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                <!-- Inline Course Panel (Hidden by default) -->
+                <div id="coursePanel"
+                    style="display: none; margin-top: 2rem; padding: 1.5rem; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); animation: fadeIn 0.3s ease-out;">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(0,0,0,0.1); padding-bottom: 1rem; margin-bottom: 1rem;">
+                        <h3 style="margin: 0; color: var(--primary);"><i class="fa-solid fa-graduation-cap"></i>
+                            Learning Path: <span id="courseSkillName" style="text-transform: capitalize;"></span></h3>
+                        <span
+                            style="background: var(--warning); color: #fff; padding: 0.2rem 0.8rem; border-radius: 20px; font-size: 0.9rem; font-weight: 600;"><i
+                                class="fa-regular fa-clock"></i> 3 Hours Total</span>
+                    </div>
+
+                    <p style="color: var(--text-color); margin-bottom: 1.5rem;">We have generated a custom curriculum to
+                        help you master <strong id="courseSkillNameBold"></strong> and improve your resume match score
+                        immediately.</p>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                        <div class="course-action-card"
+                            style="background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 1rem; border-radius: 10px; text-align: center; cursor: pointer; transition: transform 0.2s;"
+                            onmouseover="this.style.transform='scale(1.05)'"
+                            onmouseout="this.style.transform='scale(1)'" onclick="generateDynamicContent('course')">
+                            <i class="fa-solid fa-book-open" style="font-size: 2rem; margin-bottom: 0.5rem;"></i>
+                            <h4 style="margin: 0 0 0.5rem 0;">Free Text Crash Course</h4>
+                            <p style="font-size: 0.85rem; opacity: 0.9; margin: 0;">Read a 5-min quick guide</p>
+                        </div>
+
+                        <div class="course-action-card"
+                            style="background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; padding: 1rem; border-radius: 10px; text-align: center; cursor: pointer; transition: transform 0.2s;"
+                            onmouseover="this.style.transform='scale(1.05)'"
+                            onmouseout="this.style.transform='scale(1)'" onclick="generateDynamicContent('video')">
+                            <i class="fa-solid fa-play-circle" style="font-size: 2rem; margin-bottom: 0.5rem;"></i>
+                            <h4 style="margin: 0 0 0.5rem 0;">1-Minute Video Demo</h4>
+                            <p style="font-size: 0.85rem; opacity: 0.9; margin: 0;">Generate an AI Video Script</p>
+                        </div>
+
+                        <div class="course-action-card"
+                            style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white; padding: 1rem; border-radius: 10px; text-align: center; cursor: pointer; transition: transform 0.2s;"
+                            onmouseover="this.style.transform='scale(1.05)'"
+                            onmouseout="this.style.transform='scale(1)'" onclick="handleFullCourseClick()">
+                            <i class="fa-solid fa-crown" style="font-size: 2rem; margin-bottom: 0.5rem;"></i>
+                            <h4 style="margin: 0 0 0.5rem 0;">Subscribe to Full Course</h4>
+                            <p style="font-size: 0.85rem; opacity: 0.9; margin: 0;">Unlock full certification & AI
+                                player</p>
+                        </div>
+                    </div>
+
+
+                    <!-- Dynamic AI Content Display Area -->
+                    <div id="aiContentArea"
+                        style="display: none; margin-top: 2rem; padding: 1.5rem; background: var(--glass-bg); border-radius: 10px; border-left: 4px solid var(--primary);">
+                        <div id="aiLoadingSpinner" style="display: none; text-align: center; padding: 2rem;">
+                            <i class="fa-solid fa-circle-notch fa-spin"
+                                style="font-size: 2rem; color: var(--primary); margin-bottom: 1rem;"></i>
+                            <p>AI is generating custom content for you... (this is usually instant)</p>
+                        </div>
+                        <div id="aiContentResult" class="markdown-content"></div>
+                    </div>
+
+                    <!-- AI Assistant Chat -->
+                    <div id="aiAssistantArea"
+                        style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid rgba(0,0,0,0.1);">
+                        <h4 style="margin-bottom: 1rem; color: var(--text-color);"><i class="fa-solid fa-robot"
+                                style="color: var(--primary);"></i> Still have doubts? Ask the AI Tutor</h4>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <input type="text" id="aiDoubtInput"
+                                placeholder="e.g. What is the difference between React and Vue?" class="modern-input"
+                                style="flex: 1;">
+                            <button class="btn btn-primary" onclick="askAIAssistant()"><i
+                                    class="fa-solid fa-paper-plane"></i> Ask</button>
+                        </div>
+                        <div id="aiAssistantResult"
+                            style="margin-top: 1rem; padding: 1rem; background: rgba(0,0,0,0.02); border-radius: 8px; display: none;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Suggestions -->
+            <div class="card glass-panel ai-card col-span-full">
+                <h2><i class="fa-solid fa-lightbulb highlight"></i> AI Suggestions for Improvement</h2>
+                <div class="markdown-content">
+                    {{ ai_suggestions | safe }}
+                </div>
+            </div>
+
+            <!-- Interview Questions -->
+            <div class="card glass-panel ai-card col-span-full">
+                <h2><i class="fa-solid fa-comments highlight"></i> Generated Interview Questions</h2>
+                <div class="markdown-content">
+                    {{ interview_questions | safe }}
+                </div>
+            </div>
+
+            <!-- Jobs -->
+            <div class="card glass-panel col-span-full">
+                <h2><i class="fa-solid fa-briefcase"></i> Job Recommendations</h2>
+                <div class="job-links">
+                    <a href="{{ job_links['LinkedIn'] }}" target="_blank" class="job-btn linkedin"><i
+                            class="fa-brands fa-linkedin"></i> LinkedIn Jobs</a>
+                    <a href="{{ job_links['Indeed'] }}" target="_blank" class="job-btn indeed">Indeed Jobs</a>
+                    <a href="{{ job_links['Naukri'] }}" target="_blank" class="job-btn naukri">Naukri Jobs</a>
+                </div>
+            </div>
+        </main>
+
+        <!-- DIRECT 1-CLICK AUTH MODAL -->
+        <div id="directAuthModal" class="modal-overlay"
+            style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px); z-index: 9999; align-items: center; justify-content: center;">
+            <div
+                style="width: 100%; max-width: 460px; background: #ffffff; color: #0f172a; border-radius: 20px; box-shadow: 0 25px 60px rgba(0,0,0,0.4); overflow: hidden; position: relative; margin: 16px; border: 1px solid #e2e8f0; animation: scaleInGateway 0.25s ease-out;">
+                <!-- Header -->
+                <div
+                    style="background: #0f172a; color: white; padding: 20px 24px; display: flex; justify-content: space-between; align-items: center;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div
+                            style="width: 38px; height: 38px; border-radius: 10px; background: rgba(16, 185, 129, 0.15); display: flex; align-items: center; justify-content: center; color: #10b981; font-size: 1.2rem;">
+                            <i class="fa-solid fa-shield-halved"></i>
+                        </div>
+                        <div>
+                            <h3 style="margin: 0; font-size: 1.05rem; font-weight: 800; color: #ffffff;"> Secure
+                                Checkout</h3>
+                            <p style="margin: 2px 0 0 0; font-size: 0.75rem; color: #94a3b8;"><i
+                                    class="fa-solid fa-lock" style="color: #10b981;"></i> 256-Bit SSL Encrypted •
+                                PCI-DSS Level 1</p>
+                        </div>
+                    </div>
+                    <button onclick="closeDirectAuthModal()"
+                        style="background: rgba(255,255,255,0.1); border: none; color: #94a3b8; font-size: 1.2rem; cursor: pointer; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center;">&times;</button>
+                </div>
+
+                <!-- Order Summary Card -->
+                <div style="background: #f8fafc; border-bottom: 1px solid #e2e8f0; padding: 18px 24px;">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                        <div>
+                            <span
+                                style="background: #e0e7ff; color: #4338ca; font-size: 0.72rem; font-weight: 800; padding: 3px 10px; border-radius: 20px; text-transform: uppercase;">
+                                Pro Membership
+                            </span>
+                            <div id="paymentSkillTitle"
+                                style="font-weight: 800; font-size: 1.1rem; color: #0f172a; margin-top: 6px;">Full
+                                Course & Certification</div>
+                            <div style="font-size: 0.8rem; color: #64748b;">Instant access to all courses, videos, AI
+                                tutor & certs</div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-weight: 800; font-size: 1.5rem; color: #4338ca; line-height: 1;">$19.99
+                            </div>
+                            <div style="font-size: 0.72rem; color: #059669; font-weight: 700; margin-top: 2px;">Zero Tax
+                                • Cancel Anytime</div>
+                        </div>
+                    </div>
+                    <div
+                        style="border-top: 1px dashed #cbd5e1; padding-top: 10px; display: flex; gap: 14px; font-size: 0.78rem; color: #475569; font-weight: 600;">
+                        <span><i class="fa-solid fa-check" style="color: #10b981;"></i> All Video Demos</span>
+                        <span><i class="fa-solid fa-check" style="color: #10b981;"></i> Full AI Explainer</span>
+                        <span><i class="fa-solid fa-check" style="color: #10b981;"></i> Verified Certs</span>
+                    </div>
+                </div>
+
+                <!-- Clean Payment Actions -->
+                <div style="padding: 22px 24px;">
+                    <!-- Primary Option: Open Payment Gateway Options (UPI QR / Cards / Coupon) -->
+                    <button id="gwPaySubmitBtn" class="btn btn-primary"
+                        style="width: 100%; font-size: 1rem; padding: 14px; background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35);"
+                        onclick="closeDirectAuthModal(); openPaymentModal();">
+                        <i class="fa-solid fa-wallet"></i> Open Payment Options (UPI QR / Cards / Coupon)
+                    </button>
+
+                    <!-- Secondary Direct Fast Authorization Option -->
+                    <button type="button" onclick="submitDirectFastAuthorization()"
+                        style="width: 100%; margin-top: 10px; font-size: 0.85rem; padding: 10px; background: transparent; color: #6366f1; border: 1.5px solid #c7d2fe; border-radius: 10px; cursor: pointer; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <i class="fa-solid fa-shield-halved"></i> Direct 1-Click Secure Authorization ($19.99)
+                    </button>
+
+                    <!-- Collapsible Promo Code -->
+                    <div style="margin-top: 16px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <a href="javascript:void(0)" onclick="toggleCouponInput()"
+                                style="font-size: 0.82rem; font-weight: 600; color: #6366f1; text-decoration: none;">
+                                <i class="fa-solid fa-tag"></i> Have a coupon code?
+                            </a>
+                            <span style="font-size: 0.75rem; color: #94a3b8;"><i class="fa-solid fa-lock"></i> SSL
+                                Secured</span>
+                        </div>
+                        <div id="couponContainer" style="display: none; margin-top: 8px;">
+                            <div style="display: flex; gap: 8px;">
+                                <input type="text" id="gwCouponCode" placeholder="Enter coupon code"
+                                    style="flex: 1; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 0.88rem; outline: none;">
+                                <button type="button" onclick="applyCoupon()"
+                                    style="padding: 9px 18px; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.85rem; font-weight: 700; color: #334155; cursor: pointer;">
+                                    Apply
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Processing & Error Status -->
+                    <div id="gwProcessingStatus" style="display: none; margin-top: 16px; text-align: center;">
+                        <i class="fa-solid fa-circle-notch fa-spin"
+                            style="color: #4f46e5; font-size: 1.5rem; margin-bottom: 6px;"></i>
+                        <p id="gwProcessingText"
+                            style="margin: 0; font-size: 0.85rem; font-weight: 600; color: #4338ca;">Connecting to 3D
+                            Secure Banking Gateway...</p>
+                    </div>
+
+                    <div id="gwErrorMsg"
+                        style="display: none; margin-top: 14px; padding: 11px 14px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px; color: #991b1b; font-size: 0.85rem; font-weight: 500;">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <style>
+            @keyframes scaleInGateway {
+                from {
+                    transform: scale(0.92);
+                    opacity: 0;
+                }
+
+                to {
+                    transform: scale(1);
+                    opacity: 1;
+                }
+            }
+        </style>
+
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script>
+            let currentGatewayTab = 'card';
+            let targetCheckoutSkill = '';
+            let isUserSubscribed = {{ 'true' if is_subscribed else 'false' }};
+
+            function showCourseDetails(skillName) {
+                // Show the panel
+                document.getElementById('coursePanel').style.display = 'block';
+                // Update the skill name
+                document.getElementById('courseSkillName').innerText = skillName;
+                document.getElementById('courseSkillNameBold').innerText = skillName;
+                // Scroll smoothly to it
+                document.getElementById('coursePanel').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+
+            function handleFullCourseClick() {
+                const skillName = document.getElementById('courseSkillName').innerText.trim() || 'Master Course';
+                if (!isUserSubscribed) {
+                    openPaymentModal(skillName);
+                } else {
+                    window.location.href = `/learning/course?title=${encodeURIComponent(skillName)}&skill=${encodeURIComponent(skillName)}`;
+                }
+            }
+
+            let currentModalPlan = "Starter Pro";
+            let currentModalBasePrice = 999.0;
+            let currentModalDiscount = 0.0;
+            let currentModalAppliedCoupon = "";
+
+            function getModalPayablePrice() {
+                return Math.max(0, currentModalBasePrice - currentModalDiscount);
+            }
+
+            function selectModalPlan(planName, basePrice) {
+                currentModalPlan = planName;
+                currentModalBasePrice = basePrice;
+
+                const cardBasic = document.getElementById('planCardBasic') || document.getElementById('planCardStarter');
+                const cardPro = document.getElementById('planCardPro');
+                const cardVIP = document.getElementById('planCardVIP') || document.getElementById('planCardUnlimited');
+
+                const badgeBasic = document.getElementById('planBadgeBasic') || document.getElementById('planBadgeStarter');
+                const badgePro = document.getElementById('planBadgePro');
+                const badgeVIP = document.getElementById('planBadgeVIP') || document.getElementById('planBadgeUnlimited');
+
+                [cardBasic, cardPro, cardVIP].forEach(card => {
+                    if (card) card.style.border = '2px solid #e2e8f0';
+                });
+                [badgeBasic, badgePro, badgeVIP].forEach(badge => {
+                    if (badge) badge.style.display = 'none';
+                });
+
+                const clean = (planName || '').toLowerCase();
+                if (clean.includes('basic') || basePrice === 99) {
+                    if (cardBasic) cardBasic.style.border = '2px solid #4338ca';
+                    if (badgeBasic) { badgeBasic.style.display = 'block'; badgeBasic.innerText = 'SELECTED'; }
+                } else if (clean.includes('vip') || clean.includes('4999') || basePrice === 4999) {
+                    if (cardVIP) cardVIP.style.border = '2px solid #16a34a';
+                    if (badgeVIP) { badgeVIP.style.display = 'block'; badgeVIP.innerText = 'VIP ACCESS'; }
+                } else {
+                    if (cardPro) cardPro.style.border = '2px solid #2563eb';
+                    if (badgePro) { badgePro.style.display = 'block'; badgePro.innerText = 'SELECTED'; }
+                }
+
+                updateModalPriceDisplay();
+            }
+
+            function updateModalPriceDisplay() {
+                const payable = getModalPayablePrice();
+                const priceEl = document.getElementById('gatewayPlanPrice');
+                const rzpBtnText = document.getElementById('btnRzpAmountText');
+                const upiAmountText = document.getElementById('gwUpiAmountDisplay');
+                const discountPill = document.getElementById('gatewayDiscountPill');
+
+                if (priceEl) priceEl.innerText = `₹${payable.toLocaleString('en-IN')}`;
+                if (rzpBtnText) rzpBtnText.innerText = `₹${payable.toLocaleString('en-IN')}`;
+                if (upiAmountText) upiAmountText.innerText = `₹${payable.toLocaleString('en-IN')}`;
+
+                if (currentModalDiscount > 0 && discountPill) {
+                    discountPill.style.display = 'inline-block';
+                    discountPill.innerText = `Save ₹${currentModalDiscount.toLocaleString('en-IN')}`;
+                } else if (discountPill) {
+                    discountPill.style.display = 'none';
+                }
+
+                // Refresh Dynamic UPI QR Code
+                const upiIdEl = document.getElementById('gwUpiIdText');
+                const qrImg = document.getElementById('gwUpiQrImage');
+                fetch(`/api/subscriptions/upi-qr-config?plan_name=${encodeURIComponent(currentModalPlan)}${currentModalDiscount > 0 ? '&coupon_code=' + encodeURIComponent(currentModalCoupon) : ''}`)
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data && data.qr_code_url && qrImg) qrImg.src = data.qr_code_url;
+                        if (data && data.upi_id && upiIdEl) upiIdEl.innerText = data.upi_id;
+                    })
+                    .catch(() => {
+                        const upiId = upiIdEl?.innerText?.trim() || 'truprojects@upi';
+                        const upiUri = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=AI_Career_Pro&am=${payable.toFixed(2)}&cu=INR&tn=${encodeURIComponent(currentModalPlan + ' Pro Access')}`;
+                        if (qrImg) qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=8&data=${encodeURIComponent(upiUri)}`;
+                    });
+            }
+
+            function switchModalTab(tab) {
+                ['upiqr', 'razorpay', 'promo'].forEach(t => {
+                    const btn = document.getElementById('tabBtn' + t.charAt(0).toUpperCase() + t.slice(1));
+                    const content = document.getElementById('tabContent' + t.charAt(0).toUpperCase() + t.slice(1));
+                    if (t === tab) {
+                        if (btn) {
+                            btn.style.background = '#ffffff';
+                            btn.style.color = '#4338ca';
+                            btn.style.boxShadow = '0 2px 6px rgba(0,0,0,0.06)';
+                            btn.style.fontWeight = '700';
+                        }
+                        if (content) content.style.display = 'block';
+                    } else {
+                        if (btn) {
+                            btn.style.background = 'transparent';
+                            btn.style.color = '#64748b';
+                            btn.style.boxShadow = 'none';
+                            btn.style.fontWeight = '600';
+                        }
+                        if (content) content.style.display = 'none';
+                    }
+                });
+                const errDiv = document.getElementById('gwErrorMsg');
+                if (errDiv) errDiv.style.display = 'none';
+            }
+
+            async function launchCleanRazorpayCheckout() {
+                const procDiv = document.getElementById('gwProcessingStatus');
+                const procText = document.getElementById('gwProcessingText');
+                const errDiv = document.getElementById('gwErrorMsg');
+                if (errDiv) errDiv.style.display = 'none';
+                if (procDiv) {
+                    procDiv.style.display = 'block';
+                    if (procText) procText.innerText = 'Connecting to Secure Razorpay Gateway...';
+                }
+
+                const payable = getModalPayablePrice();
+
+                try {
+                    const orderRes = await fetch('/api/subscriptions/razorpay/create-order', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            amount: payable,
+                            currency: 'INR',
+                            plan_name: currentModalPlan
+                        })
+                    });
+                    const orderData = await orderRes.json();
+                    if (!orderRes.ok || !orderData.id) {
+                        throw new Error(orderData.detail || "Failed to initialize Razorpay checkout order.");
+                    }
+
+                    if (!window.Razorpay) {
+                        throw new Error("Razorpay script not loaded. Please use Direct UPI QR.");
+                    }
+
+                    const options = {
+                        key: orderData.key_id || "rzp_test_Tb2WVgfrElnHZH",
+                        amount: orderData.amount,
+                        currency: orderData.currency || "INR",
+                        name: "TruProjects AI Career Academy",
+                        description: `${currentModalPlan} Access`,
+                        image: "https://razorpay.com/favicon.png",
+                        order_id: orderData.id,
+                        handler: async function (response) {
+                            if (procDiv) {
+                                procDiv.style.display = 'block';
+                                if (procText) procText.innerText = 'Verifying signature & activating Membership...';
+                            }
+                            try {
+                                const verifyRes = await fetch('/api/subscriptions/razorpay/verify-payment', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                        razorpay_payment_id: response.razorpay_payment_id,
+                                        razorpay_order_id: response.razorpay_order_id,
+                                        razorpay_signature: response.razorpay_signature || `sig_${Date.now()}`,
+                                        plan_name: currentModalPlan,
+                                        amount: payable
+                                    })
+                                });
+                                const verifyData = await verifyRes.json();
+                                if (verifyRes.ok && verifyData.success) {
+                                    if (verifyData.requires_admin_approval || verifyData.status === 'PENDING_ADMIN_APPROVAL') {
+                                        if (procText) procText.innerHTML = '<i class="fa-solid fa-hourglass-half" style="color: #f59e0b;"></i> Payment Received! Submitted for Admin Approval. Access will unlock once Admin accepts your payment.';
+                                        setTimeout(() => window.location.reload(), 2500);
+                                    } else {
+                                        if (procText) procText.innerHTML = '<i class="fa-solid fa-circle-check" style="color: #10b981;"></i> Payment Verified! Unlocking membership...';
+                                        setTimeout(() => window.location.reload(), 1000);
+                                    }
+                                } else {
+                                    throw new Error(verifyData.detail || "Payment signature verification failed.");
+                                }
+                            } catch(vErr) {
+                                if (errDiv) {
+                                    errDiv.style.display = 'block';
+                                    errDiv.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> ' + vErr.message;
+                                }
+                            }
+                        },
+                        prefill: {
+                            name: "Valued Candidate",
+                            email: "{{ user_email if user_email else 'candidate@example.com' }}",
+                            contact: "9876543210"
+                        },
+                        theme: { color: "#4338ca" },
+                        modal: {
+                            ondismiss: function() {
+                                if (procDiv) procDiv.style.display = 'none';
+                            }
+                        }
+                    };
+
+                    const rzp = new window.Razorpay(options);
+                    rzp.on('payment.failed', function (resp){
+                        if (errDiv) {
+                            errDiv.style.display = 'block';
+                            errDiv.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> Payment notice: ' + (resp.error.description || resp.error.reason);
+                        }
+                    });
+                    if (procDiv) procDiv.style.display = 'none';
+                    rzp.open();
+                } catch(err) {
+                    if (procDiv) procDiv.style.display = 'none';
+                    if (errDiv) {
+                        errDiv.style.display = 'block';
+                        errDiv.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> Razorpay Notice: ' + err.message + '. Please use Direct UPI QR above.';
+                    }
+                }
+            }
+
+            function copyUpiId() {
+                const upiText = document.getElementById('gwUpiIdText')?.innerText || 'truprojects@upi';
+                navigator.clipboard.writeText(upiText).then(() => {
+                    const copyBtnText = document.getElementById('gwCopyBtnText');
+                    if (copyBtnText) {
+                        copyBtnText.innerText = 'Copied!';
+                        setTimeout(() => { copyBtnText.innerText = 'Copy'; }, 2000);
+                    }
+                });
+            }
+
+            async function submitUpiUtrPayment() {
+                const utr = (document.getElementById('gwUtrNumber')?.value || '').trim();
+                const errDiv = document.getElementById('gwErrorMsg');
+                const procDiv = document.getElementById('gwProcessingStatus');
+                const procText = document.getElementById('gwProcessingText');
+                const btn = document.getElementById('btnVerifyUpiUtr');
+
+                if (!utr || utr.length < 8) {
+                    if (errDiv) {
+                        errDiv.style.display = 'block';
+                        errDiv.style.background = '#fef2f2';
+                        errDiv.style.border = '1px solid #fecaca';
+                        errDiv.style.color = '#991b1b';
+                        errDiv.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> Please enter a valid 12-digit UPI UTR / Transaction Reference Number.';
+                    }
+                    return;
+                }
+
+                if (errDiv) errDiv.style.display = 'none';
+                if (procDiv) {
+                    procDiv.style.display = 'block';
+                    if (procText) procText.innerText = `Verifying UPI UTR Reference for ${currentModalPlan}...`;
+                }
+                if (btn) btn.disabled = true;
+
+                try {
+                    const token = localStorage.getItem('access_token');
+                    const headers = { 'Content-Type': 'application/json' };
+                    if (token) headers['Authorization'] = 'Bearer ' + token;
+
+                    const res = await fetch('/api/subscriptions/verify-upi-payment', {
+                        method: 'POST',
+                        headers: headers,
+                        body: JSON.stringify({
+                            utr_number: utr,
+                            plan_name: currentModalPlan,
+                            amount: getModalPayablePrice(),
+                            coupon_code: currentModalAppliedCoupon || null
+                        })
+                    });
+
+                    const data = await res.json();
+                    if (res.ok && data.success) {
+                        if (data.requires_admin_approval || data.status === 'PENDING_ADMIN_APPROVAL') {
+                            if (procText) procText.innerHTML = '<i class="fa-solid fa-hourglass-half" style="color: #f59e0b;"></i> Payment Received! Submitted for Admin Approval. Once Admin accepts your payment, your subscription will be activated.';
+                            setTimeout(() => window.location.reload(), 2500);
+                        } else {
+                            if (procText) procText.innerHTML = '<i class="fa-solid fa-circle-check" style="color: #16a34a;"></i> Coupon Applied! Subscription activated instantly without requiring Admin approval.';
+                            isUserSubscribed = true;
+                            setTimeout(() => {
+                                closePaymentModal();
+                                const skill = targetCheckoutSkill || document.getElementById('courseSkillName')?.innerText?.trim() || 'Master Course';
+                                window.location.href = `/learning/course?title=${encodeURIComponent(skill)}&skill=${encodeURIComponent(skill)}`;
+                            }, 1000);
+                        }
+                    } else {
+                        if (procDiv) procDiv.style.display = 'none';
+                        if (errDiv) {
+                            errDiv.style.display = 'block';
+                            errDiv.style.background = '#fef2f2';
+                            errDiv.style.border = '1px solid #fecaca';
+                            errDiv.style.color = '#991b1b';
+                            errDiv.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> ' + (data.detail || data.message || 'Failed to verify UPI UTR.');
+                        }
+                        if (btn) btn.disabled = false;
+                    }
+                } catch (err) {
+                    if (procDiv) procDiv.style.display = 'none';
+                    if (errDiv) {
+                        errDiv.style.display = 'block';
+                        errDiv.style.background = '#fef2f2';
+                        errDiv.style.border = '1px solid #fecaca';
+                        errDiv.style.color = '#991b1b';
+                        errDiv.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> Error communicating with server: ' + err.message;
+                    }
+                    if (btn) btn.disabled = false;
+                }
+            }
+
+            function handleFullCourseClick() {
+                const skillName = document.getElementById('courseSkillName')?.innerText?.trim() || 'Master Course';
+                openPaymentModal(skillName);
+            }
+
+            function openDirectAuthModal() {
+                const modal = document.getElementById('directAuthModal');
+                if (modal) modal.style.display = 'flex';
+            }
+
+            function closeDirectAuthModal() {
+                const modal = document.getElementById('directAuthModal');
+                if (modal) modal.style.display = 'none';
+            }
+
+            function openPaymentModal(skillName) {
+                closeDirectAuthModal();
+                targetCheckoutSkill = skillName || document.getElementById('courseSkillName')?.innerText?.trim() || 'Master Course';
+                selectModalPlan('Pro Unlimited', 999.0);
+                const modal = document.getElementById('paymentModal');
+                if (modal) modal.style.display = 'flex';
+                const errDiv = document.getElementById('gwErrorMsg');
+                if (errDiv) errDiv.style.display = 'none';
+                const procDiv = document.getElementById('gwProcessingStatus');
+                if (procDiv) procDiv.style.display = 'none';
+                switchModalTab('upiqr');
+            }
+
+            function closePaymentModal() {
+                const modal = document.getElementById('paymentModal');
+                if (modal) modal.style.display = 'none';
+            }
+
+            async function applyCoupon() {
+                const code = (document.getElementById('gwCouponCode')?.value || '').trim();
+                const errDiv = document.getElementById('gwErrorMsg');
+                if (!code) return;
+
+                errDiv.style.display = 'block';
+                errDiv.style.background = '#eef2ff';
+                errDiv.style.border = '1px solid #c7d2fe';
+                errDiv.style.color = '#4338ca';
+                errDiv.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Validating coupon...';
+
+                try {
+                    const token = localStorage.getItem('access_token');
+                    const headers = { 'Content-Type': 'application/json' };
+                    if (token) headers['Authorization'] = 'Bearer ' + token;
+
+                    const res = await fetch('/api/subscriptions/coupons/validate', {
+                        method: 'POST',
+                        headers: headers,
+                        body: JSON.stringify({
+                            coupon_code: code,
+                            plan_name: currentModalPlan,
+                            original_amount: currentModalBasePrice
+                        })
+                    });
+                    const data = await res.json();
+                    if (res.ok && data.valid) {
+                        currentModalDiscount = data.discount_amount || 0.0;
+                        currentModalAppliedCoupon = code;
+                        updateModalPriceDisplay();
+
+                        errDiv.style.background = '#f0fdf4';
+                        errDiv.style.border = '1px solid #bbf7d0';
+                        errDiv.style.color = '#15803d';
+                        errDiv.innerHTML = `<i class="fa-solid fa-circle-check"></i> Coupon applied! ₹${data.discount_amount} Discount. Final payable: ₹${data.final_amount}`;
+
+                        if (data.final_amount === 0) {
+                            setTimeout(async () => {
+                                await fetch('/upgrade', {
+                                    method: 'POST',
+                                    headers: headers,
+                                    body: JSON.stringify({ coupon: code, payment_method: 'coupon', amount: 0.0 })
+                                });
+                                closePaymentModal();
+                                const skill = targetCheckoutSkill || document.getElementById('courseSkillName')?.innerText?.trim() || 'Master Course';
+                                window.location.href = `/learning/course?title=${encodeURIComponent(skill)}&skill=${encodeURIComponent(skill)}`;
+                            }, 800);
+                        }
+                        return;
+                    } else {
+                        errDiv.style.background = '#fef2f2';
+                        errDiv.style.border = '1px solid #fecaca';
+                        errDiv.style.color = '#991b1b';
+                        errDiv.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> ' + (data.message || data.detail || 'Invalid promo code. Please try again.');
+                        return;
+                    }
+                } catch (e) {
+                    errDiv.style.background = '#fef2f2';
+                    errDiv.style.border = '1px solid #fecaca';
+                    errDiv.style.color = '#991b1b';
+                    errDiv.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> ' + (e.message || 'Failed to apply coupon.');
+                }
+            }
+
+
+
+            async function submitDirectFastAuthorization() {
+                const btn = document.getElementById('gwPaySubmitBtn');
+                const procDiv = document.getElementById('gwProcessingStatus');
+                const procText = document.getElementById('gwProcessingText');
+                const errDiv = document.getElementById('gwErrorMsg');
+
+                if (errDiv) errDiv.style.display = 'none';
+                if (btn) {
+                    btn.disabled = true;
+                    btn.style.opacity = '0.75';
+                }
+                if (procDiv) {
+                    procDiv.style.display = 'block';
+                    if (procText) procText.innerText = 'Authorizing 256-Bit Secure Payment...';
+                }
+
+                await new Promise(r => setTimeout(r, 600));
+
+                try {
+                    const res = await fetch('/upgrade', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            payment_method: "clean_checkout",
+                            plan_name: "AI Career Pro Membership",
+                            amount: 19.99
+                        })
+                    });
+                    const data = await res.json();
+
+                    if (res.ok && data.success) {
+                        if (procText) procText.innerHTML = '<i class="fa-solid fa-circle-check" style="color: #10b981;"></i> Payment Approved! Transaction ID: ' + (data.transaction_id || 'TXN_SUCCESS');
+                        isUserSubscribed = true;
+                        setTimeout(() => {
+                            closeDirectAuthModal();
+                            closePaymentModal();
+                            const skill = targetCheckoutSkill || document.getElementById('courseSkillName')?.innerText?.trim() || 'Master Course';
+                            window.location.href = `/learning/course?title=${encodeURIComponent(skill)}&skill=${encodeURIComponent(skill)}`;
+                        }, 900);
+                    } else {
+                        if (errDiv) {
+                            errDiv.style.display = 'block';
+                            errDiv.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> ' + (data.detail || 'Authorization failed. Please try again.');
+                        }
+                        if (procDiv) procDiv.style.display = 'none';
+                        if (btn) {
+                            btn.disabled = false;
+                            btn.style.opacity = '1';
+                        }
+                    }
+                } catch (e) {
+                    if (errDiv) {
+                        errDiv.style.display = 'block';
+                        errDiv.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> Network error connecting to payment gateway. Please try again.';
+                    }
+                    if (procDiv) procDiv.style.display = 'none';
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.style.opacity = '1';
+                    }
+                }
+            }
+
+            let slideInterval;
+            function generateDynamicContent(type) {
+
+                const skillName = document.getElementById('courseSkillName').innerText;
+                const endpoint = type === 'course' ? '/api/generate_course' : '/api/generate_video';
+
+                document.getElementById('aiContentArea').style.display = 'block';
+                document.getElementById('aiLoadingSpinner').style.display = 'block';
+                document.getElementById('aiContentResult').innerHTML = '';
+                if (slideInterval) clearInterval(slideInterval);
+
+                fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ skill: skillName })
+                })
+                    .then(response => {
+                        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                        return response.json();
+                    })
+                    .then(data => {
+                        document.getElementById('aiLoadingSpinner').style.display = 'none';
+
+                        if (data.type === 'slideshow') {
+                            renderSlideshow(data.slides);
+                        } else {
+                            document.getElementById('aiContentResult').innerHTML = data.content || data;
+                        }
+                    })
+                    .catch(error => {
+                        document.getElementById('aiLoadingSpinner').style.display = 'none';
+                        document.getElementById('aiContentResult').innerHTML = `<p style="color:red;">Error: ${error}</p>`;
+                    });
+            }
+
+            function renderSlideshow(slides) {
+                if (!slides || !slides.length) {
+                    document.getElementById('aiContentResult').innerHTML = '<p>No slides generated.</p>';
+                    return;
+                }
+
+                let html = `
+        <div style="background: #111; border-radius: 12px; overflow: hidden; position: relative; width: 100%; aspect-ratio: 16/9; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; color: white; padding: 2rem; box-shadow: inset 0 0 50px rgba(0,0,0,0.8);">
+            <div id="slideContent" style="animation: fadeIn 0.5s;">
+                <h2 id="slideTitle" style="color: #fff; font-size: 2.5rem; margin-bottom: 1rem; text-shadow: 2px 2px 10px rgba(0,0,0,0.5);"></h2>
+                <p id="slideDesc" style="font-size: 1.2rem; color: #ccc; max-width: 80%; margin: 0 auto; line-height: 1.6;"></p>
+            </div>
+            
+            <!-- Controls -->
+            <div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.6); padding: 1rem; display: flex; align-items: center; justify-content: space-between;">
+                <button class="btn btn-outline" style="border:none; color: white;" onclick="prevSlide()"><i class="fa-solid fa-backward"></i></button>
+                <button class="btn btn-primary" style="border:none; border-radius: 50%; width: 40px; height: 40px; padding: 0; display: flex; justify-content: center; align-items: center; margin: 0 10px;" onclick="playVoice()" title="Play Voice TTS"><i class="fa-solid fa-volume-high"></i></button>
+                <div style="flex: 1; margin: 0 1rem; background: #333; height: 6px; border-radius: 3px; overflow: hidden; position: relative;">
+                    <div id="slideProgress" style="width: 0%; height: 100%; background: var(--primary); transition: width 0.3s;"></div>
+                </div>
+                <button class="btn btn-outline" style="border:none; color: white;" onclick="nextSlide()"><i class="fa-solid fa-forward"></i></button>
+            </div>
+            
+            <!-- Fake Play Icon overlay to look like a video -->
+            <i class="fa-solid fa-play" style="position: absolute; top: 1rem; left: 1rem; color: rgba(255,255,255,0.2); font-size: 2rem;"></i>
+            <span style="position: absolute; top: 1rem; right: 1rem; color: rgba(255,255,255,0.5); font-size: 0.9rem; font-family: monospace;">AI Video Player v1.0</span>
+        </div>
+        `;
+
+                document.getElementById('aiContentResult').innerHTML = html;
+
+                window.currentSlides = slides;
+                window.currentSlideIndex = 0;
+                updateSlide();
+
+                // Disable auto-play to allow voice reading without skipping
+                if (slideInterval) clearInterval(slideInterval);
+                // slideInterval = setInterval(nextSlide, 5000);
+            }
+
+            window.playVoice = function () {
+                if (!window.currentSlides) return;
+                const slide = window.currentSlides[window.currentSlideIndex];
+                const text = `${slide.title}. ${slide.content}`;
+
+                // Check browser support
+                if ('speechSynthesis' in window) {
+                    window.speechSynthesis.cancel(); // Stop any currently playing audio
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    utterance.rate = 1.0;
+                    utterance.pitch = 1.1;
+
+                    // Auto advance slide when speech ends
+                    utterance.onend = function () {
+                        if (window.currentSlideIndex < window.currentSlides.length - 1) {
+                            nextSlide();
+                            setTimeout(playVoice, 500); // Play next slide automatically
+                        }
+                    };
+
+                    window.speechSynthesis.speak(utterance);
+                } else {
+                    alert("Text-to-Speech is not supported in your browser.");
+                }
+            };
+
+            window.updateSlide = function () {
+                if (!window.currentSlides) return;
+                const slide = window.currentSlides[window.currentSlideIndex];
+                const contentDiv = document.getElementById('slideContent');
+
+                // Brief fade out/in effect
+                contentDiv.style.opacity = '0';
+                setTimeout(() => {
+                    document.getElementById('slideTitle').innerText = slide.title || 'Concept';
+                    document.getElementById('slideDesc').innerText = slide.content || '';
+                    document.getElementById('slideProgress').style.width = `${((window.currentSlideIndex + 1) / window.currentSlides.length) * 100}%`;
+                    contentDiv.style.opacity = '1';
+                }, 200);
+            };
+
+            window.nextSlide = function () {
+                if (!window.currentSlides) return;
+                window.currentSlideIndex = (window.currentSlideIndex + 1) % window.currentSlides.length;
+                window.updateSlide();
+            };
+
+            window.prevSlide = function () {
+                if (!window.currentSlides) return;
+                window.currentSlideIndex = (window.currentSlideIndex - 1 + window.currentSlides.length) % window.currentSlides.length;
+                window.updateSlide();
+            };
+
+            function askAIAssistant() {
+                const skillName = document.getElementById('courseSkillName').innerText;
+                const question = document.getElementById('aiDoubtInput').value;
+                if (!question) return;
+
+                const resultArea = document.getElementById('aiAssistantResult');
+                resultArea.style.display = 'block';
+                resultArea.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> AI is thinking...';
+
+                fetch('/api/ask_ai', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ skill: skillName, question: question })
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        resultArea.innerHTML = `<strong>Answer:</strong><br>${data.content}`;
+                    })
+                    .catch(error => {
+                        resultArea.innerHTML = `<p style="color:red;">Error: ${error}</p>`;
+                    });
+            }
+
+            document.addEventListener("DOMContentLoaded", function () {
+                const ctx = document.getElementById('matchChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Matched', 'Missing'],
+                        datasets: [{
+                            data: [{{ matched_pct }}, {{ missing_pct }}],
+                    backgroundColor: [
+                        '#38a169',
+                        '#e53e3e'
+                    ],
+                    borderWidth: 0,
+                    hoverOffset: 10
+                }]
+            },
+                options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '75%',
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 20,
+                            font: {
+                                family: "'Outfit', sans-serif",
+                                size: 14,
+                                weight: '600'
+                            },
+                            color: '#4a5568'
+                        }
+                    }
+                },
+                animation: {
+                    animateScale: true,
+                    animateRotate: true,
+                    duration: 1500,
+                    easing: 'easeOutQuart'
+                }
+            }
+        });
+    });
+        </script>
+
+        <!-- REALISTIC USER PAYMENT GATEWAY MODAL -->
+        <div id="paymentModal" onclick="if(event.target===this)closePaymentModal()"
+            style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.75); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(8px); padding: 16px; box-sizing: border-box;">
+            <div class="gateway-modal"
+                style="background: #ffffff; width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto; border-radius: 18px; position: relative; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); font-family: 'Outfit', system-ui, sans-serif;">
+
+                <!-- Gateway Header -->
+                <div
+                    style="background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); color: white; padding: 1.5rem 1.8rem; position: relative;">
+                    <button onclick="closePaymentModal()"
+                        style="position: absolute; top: 1.2rem; right: 1.5rem; background: rgba(255,255,255,0.1); border: none; font-size: 1.2rem; cursor: pointer; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">&times;</button>
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
+                        <span
+                            style="background: rgba(99, 102, 241, 0.25); border: 1px solid rgba(99, 102, 241, 0.5); color: #a5b4fc; padding: 2px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;">
+                            <i class="fa-solid fa-lock"></i> 256-Bit SSL Encrypted
+                        </span>
+                        <span style="color: #10b981; font-size: 0.75rem; font-weight: 600;"><i
+                                class="fa-solid fa-shield-check"></i> PCI-DSS Level 1</span>
+                    </div>
+                    <h3 style="margin: 0; font-size: 1.35rem; font-weight: 700; color: #ffffff;"> Secure Checkout</h3>
+                    <p style="margin: 4px 0 0 0; color: #94a3b8; font-size: 0.85rem;">Unlock All AI Micro-Courses, Video
+                        Demos & Verified Certifications</p>
+                </div>
+
+                <!-- Order Summary Banner -->
+                <div style="background: #f8fafc; padding: 1rem 1.8rem; border-bottom: 1px solid #e2e8f0;">
+                    <div
+                        style="font-size: 0.78rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">
+                        Select Membership Plan:
+                    </div>
+                    <!-- 3-Tier Plan Selector -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+                        <!-- Tier 1: Basic Pack (₹99) -->
+                        <div id="planCardBasic" onclick="selectModalPlan('Basic Pack', 99.0)"
+                            style="background: #ffffff; border: 2px solid #4338ca; border-radius: 12px; padding: 10px 8px; cursor: pointer; transition: all 0.2s; position: relative;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                <span style="font-weight: 800; font-size: 0.82rem; color: #0f172a;" id="planTitleBasic">Basic Pack</span>
+                                <span style="font-size: 0.95rem; font-weight: 800; color: #4338ca;">₹99</span>
+                            </div>
+                            <div style="font-size: 0.70rem; color: #64748b; line-height: 1.25;">
+                                10 Resumes • Courses<br>10 Quizzes • 5 Certs
+                            </div>
+                            <div id="planBadgeBasic" style="position: absolute; top: -8px; right: 6px; background: #4338ca; color: white; font-size: 0.60rem; font-weight: 800; padding: 1px 5px; border-radius: 8px;">
+                                SELECTED
+                            </div>
+                        </div>
+
+                        <!-- Tier 2: Pro Unlimited (₹999) -->
+                        <div id="planCardPro" onclick="selectModalPlan('Pro Unlimited', 999.0)"
+                            style="background: #ffffff; border: 2px solid #e2e8f0; border-radius: 12px; padding: 10px 8px; cursor: pointer; transition: all 0.2s; position: relative;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                <span style="font-weight: 800; font-size: 0.82rem; color: #0f172a;" id="planTitlePro">Pro Pack</span>
+                                <span style="font-size: 0.95rem; font-weight: 800; color: #2563eb;">₹999</span>
+                            </div>
+                            <div style="font-size: 0.70rem; color: #64748b; line-height: 1.25;">
+                                Unlimited Resumes<br>All Courses & Certs
+                            </div>
+                            <div id="planBadgePro" style="display: none; position: absolute; top: -8px; right: 6px; background: #2563eb; color: white; font-size: 0.60rem; font-weight: 800; padding: 1px 5px; border-radius: 8px;">
+                                POPULAR
+                            </div>
+                        </div>
+
+                        <!-- Tier 3: VIP Lifetime (₹4,999) -->
+                        <div id="planCardVIP" onclick="selectModalPlan('VIP Lifetime', 4999.0)"
+                            style="background: #ffffff; border: 2px solid #e2e8f0; border-radius: 12px; padding: 10px 8px; cursor: pointer; transition: all 0.2s; position: relative;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                <span style="font-weight: 800; font-size: 0.82rem; color: #0f172a;" id="planTitleVIP">VIP Life</span>
+                                <span style="font-size: 0.95rem; font-weight: 800; color: #16a34a;">₹4,999</span>
+                            </div>
+                            <div style="font-size: 0.70rem; color: #64748b; line-height: 1.25;">
+                                VIP Unlimited<br>Coupon DISCOUNT1500
+                            </div>
+                            <div id="planBadgeVIP" style="display: none; position: absolute; top: -8px; right: 6px; background: #16a34a; color: white; font-size: 0.60rem; font-weight: 800; padding: 1px 5px; border-radius: 8px;">
+                                VIP ACCESS
+                            </div>
+                        </div>
+                    </div>
+
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding-top: 8px; border-top: 1px dashed #e2e8f0;">
+                        <div style="font-size: 0.82rem; color: #475569;">
+                            Total Payable: <strong style="font-size: 1.15rem; color: #0f172a;"
+                                id="gatewayPlanPrice">₹999</strong>
+                            <span id="gatewayDiscountPill"
+                                style="display: none; background: #dcfce7; color: #15803d; font-size: 0.72rem; font-weight: 800; padding: 2px 6px; border-radius: 6px; margin-left: 6px;"></span>
+                        </div>
+                        <div style="font-size: 0.72rem; color: #10b981; font-weight: 700;"><i
+                                class="fa-solid fa-shield-check"></i> Zero Tax • Instant Access</div>
+                    </div>
+                </div>
+
+                <!-- Clean Payment Actions Body -->
+                <div style="padding: 20px 24px;">
+                    <!-- Payment Mode Selector Tabs -->
+                    <div style="display: flex; gap: 6px; background: #f1f5f9; padding: 4px; border-radius: 12px; margin-bottom: 16px;">
+                        <button type="button" id="tabBtnUpiQr" onclick="switchModalTab('upiqr')"
+                            style="flex: 1; padding: 9px 8px; border: none; border-radius: 9px; font-weight: 700; font-size: 0.84rem; cursor: pointer; background: #ffffff; color: #4338ca; box-shadow: 0 2px 6px rgba(0,0,0,0.06); display: flex; align-items: center; justify-content: center; gap: 6px;">
+                            <i class="fa-solid fa-qrcode"></i> Direct UPI QR
+                        </button>
+                        <button type="button" id="tabBtnRazorpay" onclick="switchModalTab('razorpay')"
+                            style="flex: 1; padding: 9px 8px; border: none; border-radius: 9px; font-weight: 600; font-size: 0.84rem; cursor: pointer; background: transparent; color: #64748b; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                            <i class="fa-solid fa-bolt"></i> Razorpay / Cards
+                        </button>
+                        <button type="button" id="tabBtnPromo" onclick="switchModalTab('promo')"
+                            style="flex: 1; padding: 9px 8px; border: none; border-radius: 9px; font-weight: 600; font-size: 0.84rem; cursor: pointer; background: transparent; color: #64748b; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                            <i class="fa-solid fa-tag"></i> Coupon
+                        </button>
+                    </div>
+
+                    <!-- TAB 1: DIRECT UPI QR SCANNER (0% Fee, GPay, PhonePe, Paytm, BHIM) -->
+                    <div id="tabContentUpiQr" style="display: block;">
+                        <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 14px; padding: 14px; text-align: center; margin-bottom: 14px;">
+                            <div style="display: flex; justify-content: center; margin-bottom: 10px;">
+                                <div style="background: white; padding: 8px; border-radius: 12px; border: 1px solid #cbd5e1; box-shadow: 0 4px 12px rgba(0,0,0,0.05); display: inline-block;">
+                                    <img id="gwUpiQrImage"
+                                        src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=8&data=upi%3A%2F%2Fpay%3Fpa%3Dtruprojects%40upi%26pn%3DAI_Career_Pro%26am%3D999.00%26cu%3DINR"
+                                        alt="UPI QR Code" style="width: 170px; height: 170px; display: block;">
+                                </div>
+                            </div>
+
+                            <div style="font-size: 0.85rem; color: #475569; margin-bottom: 6px;">
+                                Scan to pay <strong id="gwUpiAmountDisplay">₹999</strong> with <strong>Google Pay, PhonePe, Paytm, BHIM</strong>
+                            </div>
+
+                            <!-- UPI ID & Copy -->
+                            <div style="display: inline-flex; align-items: center; gap: 8px; background: #ffffff; border: 1px solid #cbd5e1; padding: 5px 12px; border-radius: 20px; font-size: 0.85rem;">
+                                <span style="font-weight: 700; color: #0f172a;" id="gwUpiIdText">truprojects@upi</span>
+                                <button type="button" onclick="copyUpiId()"
+                                    style="background: #eef2ff; border: none; color: #4f46e5; font-weight: 700; font-size: 0.75rem; padding: 3px 8px; border-radius: 6px; cursor: pointer;">
+                                    <i class="fa-regular fa-copy"></i> <span id="gwCopyBtnText">Copy</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Step 2: UTR Reference Submission -->
+                        <div style="margin-bottom: 10px;">
+                            <label style="display: block; font-size: 0.82rem; font-weight: 700; color: #0f172a; margin-bottom: 5px;">
+                                <i class="fa-solid fa-receipt" style="color: #2563eb;"></i> Enter 12-Digit UPI UTR / Ref Number after payment:
+                            </label>
+                            <input type="text" id="gwUtrNumber" placeholder="e.g. 423981729102" maxlength="22"
+                                style="width: 100%; padding: 11px 14px; border: 2px solid #cbd5e1; border-radius: 10px; font-size: 0.95rem; font-weight: 700; outline: none; box-sizing: border-box; font-family: monospace; letter-spacing: 1px;">
+                        </div>
+
+                        <button type="button" id="btnVerifyUpiUtr" onclick="submitUpiUtrPayment()" class="btn btn-primary"
+                            style="width: 100%; font-size: 0.98rem; padding: 13px; background: linear-gradient(135deg, #16a34a 0%, #15803d 100%); color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 14px rgba(22, 163, 74, 0.35);">
+                            <i class="fa-solid fa-circle-check"></i> Verify UTR & Activate Plan
+                        </button>
+                    </div>
+
+                    <!-- TAB 2: RAZORPAY OFFICIAL GATEWAY -->
+                    <div id="tabContentRazorpay" style="display: none;">
+                        <div style="background: linear-gradient(135deg, #072654 0%, #0d3b7a 100%); padding: 20px; border-radius: 14px; margin-bottom: 14px; text-align: center; color: white; box-shadow: 0 4px 14px rgba(7, 38, 84, 0.2);">
+                            <img src="https://razorpay.com/favicon.png" alt="Razorpay" style="width: 42px; height: 42px; border-radius: 10px; background: white; padding: 4px; margin-bottom: 10px;">
+                            <h4 style="margin: 0 0 4px 0; font-size: 1.1rem; color: #ffffff; font-weight: 800;">Official Razorpay Instant Gateway</h4>
+                            <p style="margin: 0 0 14px 0; font-size: 0.82rem; color: #93c5fd;">Pay securely using Credit/Debit Cards, NetBanking, Wallets & UPI</p>
+                            
+                            <div style="display: flex; justify-content: center; gap: 10px; font-size: 0.74rem; color: #e2e8f0; margin-bottom: 16px; background: rgba(255,255,255,0.08); padding: 8px 12px; border-radius: 8px; flex-wrap: wrap;">
+                                <span><i class="fa-solid fa-credit-card"></i> Cards</span> •
+                                <span><i class="fa-solid fa-building-columns"></i> NetBanking</span> •
+                                <span><i class="fa-solid fa-mobile-screen"></i> GPay / PhonePe / Paytm</span>
+                            </div>
+
+                            <button type="button" onclick="launchCleanRazorpayCheckout()" style="width: 100%; background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: white; border: none; padding: 13px; border-radius: 10px; font-weight: 800; font-size: 0.98rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);">
+                                <i class="fa-solid fa-bolt"></i> Pay via Razorpay (<span id="btnRzpAmountText">₹999</span>)
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- TAB 3: COUPON / PROMO CODE -->
+                    <div id="tabContentPromo" style="display: none;">
+                        <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 14px; padding: 16px;">
+                            <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #0f172a; margin-bottom: 8px;">
+                                <i class="fa-solid fa-tag" style="color: #6366f1;"></i> Enter Promotional Coupon Code:
+                            </label>
+                            <div style="display: flex; gap: 8px;">
+                                <input type="text" id="gwCouponCode" placeholder="e.g. DISCOUNT1500, SAVE1500"
+                                    style="flex: 1; padding: 11px 14px; border: 2px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem; font-weight: 700; outline: none; text-transform: uppercase;">
+                                <button type="button" onclick="applyCoupon()"
+                                    style="padding: 11px 20px; background: #4f46e5; border: none; border-radius: 8px; font-size: 0.9rem; font-weight: 800; color: #ffffff; cursor: pointer;">
+                                    Apply
+                                </button>
+                            </div>
+                            <div style="background: #e0e7ff; border: 1px solid #c7d2fe; border-radius: 8px; padding: 8px 12px; margin-top: 10px; font-size: 0.82rem; color: #3730a3;">
+                                <i class="fa-solid fa-sparkles"></i> Promo Offer: Use code <strong>DISCOUNT1500</strong> or <strong>SAVE1500</strong> for flat <strong>₹1,500 Instant Discount</strong> on Unlimited Pro!
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Processing & Error Status -->
+                    <div id="gwProcessingStatus" style="display: none; margin-top: 14px; text-align: center;">
+                        <i class="fa-solid fa-circle-notch fa-spin"
+                            style="color: #4f46e5; font-size: 1.4rem; margin-bottom: 6px;"></i>
+                        <p id="gwProcessingText"
+                            style="margin: 0; font-size: 0.85rem; font-weight: 600; color: #4338ca;">Connecting to
+                            Banking Gateway...</p>
+                    </div>
+
+                    <div id="gwErrorMsg"
+                        style="display: none; margin-top: 14px; padding: 11px 14px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px; color: #991b1b; font-size: 0.85rem; font-weight: 500;">
+                    </div>
+
+                    <div style="text-align: center; margin-top: 16px; padding-top: 10px; border-top: 1px solid #f1f5f9;">
+                        <button type="button" onclick="closePaymentModal()" style="background: transparent; border: none; color: #64748b; font-size: 0.82rem; font-weight: 600; cursor: pointer; text-decoration: underline;">
+                            <i class="fa-solid fa-xmark"></i> Cancel & Close Modal
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

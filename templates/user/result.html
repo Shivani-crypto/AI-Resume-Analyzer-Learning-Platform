@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Extracted Text - AI Resume Analyzer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container wide">
+        <header class="app-header small-header">
+            <h1><i class="fa-solid fa-file-lines kpi-icon-indigo"></i> Extracted Resume Text</h1>
+        </header>
+
+        <main class="dashboard-wrapper">
+            <section class="dash-card">
+                <div class="text-container">
+                    {% if text %}
+                        <pre class="extracted-text code-block">{{ text }}</pre>
+                    {% else %}
+                        <div class="empty-state-box">
+                            <div class="empty-state-icon">
+                                <i class="fa-solid fa-box-open"></i>
+                            </div>
+                            <p class="empty-state-text">No text found or extraction failed.</p>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="resume-toolbar">
+                    <a href="/dashboard" class="btn btn-outline"><i class="fa-solid fa-arrow-left"></i> Back to Dashboard</a>
+                    <a href="/analyze_page" class="btn btn-primary">Proceed to AI Matcher <i class="fa-solid fa-arrow-right"></i></a>
+                </div>
+            </section>
+        </main>
+    </div>
+</body>
+</html>
