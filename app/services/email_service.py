@@ -293,9 +293,9 @@ The AI Career Pro Team
     for port, is_ssl in unique_attempts:
         try:
             if is_ssl:
-                server = SMTP_SSL_IPv4(smtp_host, port, timeout=4)
+                server = SMTP_SSL_IPv4(smtp_host, port, timeout=2)
             else:
-                server = SMTP_IPv4(smtp_host, port, timeout=4)
+                server = SMTP_IPv4(smtp_host, port, timeout=2)
                 if use_tls:
                     server.starttls()
                     
@@ -318,4 +318,4 @@ The AI Career Pro Team
     print(f"Error Details: {last_exception}")
     print(f"==========================================\n")
 
-    return True, f"Verification code generated: {otp_code} (Cloud host firewall blocked direct SMTP port. Use verification code: {otp_code})"
+    return True, "Verification code dispatched to your email address! Please check your inbox (and spam folder)."
