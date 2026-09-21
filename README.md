@@ -3,6 +3,8 @@
 
 ---
 
+> 🌐 **Live Application:** [https://ai-resume-analyzer-learning-platform.onrender.com/](https://ai-resume-analyzer-learning-platform.onrender.com/)
+
 ## 1. Executive Summary & High-Level System Architecture
 
 The **Unified AI Resume Analyzer & Micro-Learning Platform** is an enterprise-grade AI-powered web application built with **FastAPI**, **Jinja2 Templates**, **SQLAlchemy ORM**, **Scikit-Learn (TF-IDF & Cosine Similarity)**, **LangChain / RAG FAISS**, **ReportLab PDF Generation**, and **Supabase / Local Storage**.
