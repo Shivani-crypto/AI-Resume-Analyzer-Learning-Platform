@@ -237,7 +237,44 @@ The AI Career Pro Team
     msg.attach(MIMEText(plain_text, "plain"))
     msg.attach(MIMEText(html_content, "html"))
 
-    # Dual port fallback attempts: configured port first, then 587 TLS, then 465 SSL
+    # 1. Try HTTPS API Email Providers if configured (Resend / Brevo / SendGrid over Port 443)
+    resend_key = os.getenv("RESEND_API_KEY")
+    brevo_key = os.getenv("BREVO_API_KEY")
+
+    if resend_key:
+        try:
+            import requests
+            r = requests.post(
+                "https://api.resend.com/emails",
+                headers={"Authorization": f"Bearer {resend_key}", "Content-Type": "application/json"},
+                json={"from": "AI Career Pro <onboarding@resend.dev>", "to": [clean_email], "subject": f"Your Verification Code: {otp_code}", "html": html_content},
+                timeout=5
+            )
+            if r.status_code in (200, 201):
+                return True, "Verification code sent to your email successfully!"
+        except Exception as api_e:
+            print(f"[Resend API Notice]: {api_e}")
+
+    if brevo_key:
+        try:
+            import requests
+            r = requests.post(
+                "https://api.brevo.com/v3/smtp/email",
+                headers={"api-key": brevo_key, "Content-Type": "application/json"},
+                json={
+                    "sender": {"name": "AI Career Pro", "email": from_email},
+                    "to": [{"email": clean_email}],
+                    "subject": f"Your Verification Code: {otp_code}",
+                    "htmlContent": html_content
+                },
+                timeout=5
+            )
+            if r.status_code in (200, 201):
+                return True, "Verification code sent to your email successfully!"
+        except Exception as api_e:
+            print(f"[Brevo API Notice]: {api_e}")
+
+    # 2. Try TCP SMTP Socket Connection (port 587/465 with 4s timeout)
     connection_attempts = [
         (smtp_port, smtp_port == 465),
         (587, False),
@@ -256,9 +293,9 @@ The AI Career Pro Team
     for port, is_ssl in unique_attempts:
         try:
             if is_ssl:
-                server = SMTP_SSL_IPv4(smtp_host, port, timeout=12)
+                server = SMTP_SSL_IPv4(smtp_host, port, timeout=4)
             else:
-                server = SMTP_IPv4(smtp_host, port, timeout=12)
+                server = SMTP_IPv4(smtp_host, port, timeout=4)
                 if use_tls:
                     server.starttls()
                     
@@ -273,7 +310,7 @@ The AI Career Pro Team
             last_exception = e
             print(f"[SMTP Warning] Connection attempt failed on port {port} (SSL={is_ssl}): {e}")
 
-    # Fallback if cloud server blocks outbound ports completely
+    # 3. Fallback if cloud server firewall blocks SMTP ports completely
     print(f"\n==========================================")
     print(f"[SMTP NETWORK FALLBACK MODE] Cloud Network Unreachable")
     print(f"To: {clean_email}")
@@ -281,4 +318,4 @@ The AI Career Pro Team
     print(f"Error Details: {last_exception}")
     print(f"==========================================\n")
 
-    return True, f"Verification code generated. (Cloud host network blocked SMTP connection; check Render dashboard logs for OTP or configure Gmail App Password)"
+    return True, f"Verification code generated: {otp_code} (Cloud host firewall blocked direct SMTP port. Use verification code: {otp_code})"
