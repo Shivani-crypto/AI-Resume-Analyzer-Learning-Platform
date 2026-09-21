@@ -123,10 +123,35 @@ def init_db():
                     exists.discount_value = 1500.0
                     exists.minimum_amount = 1500.0
                     exists.is_active = True
+        # Seed default Admin & Demo Candidate accounts if missing
+        default_users = [
+            ("Admin System", "admin@domain.com", "admin123", "ADMIN"),
+            ("Shivani Admin", "shivanichittam666@gmail.com", "admin123", "ADMIN"),
+            ("Demo Candidate", "user@domain.com", "user123", "STUDENT")
+        ]
+        for name, em, pw, r in default_users:
+            clean_em = em.strip().lower()
+            u_exists = db.query(User).filter(User.email == clean_em).first()
+            if not u_exists:
+                new_u = User(
+                    full_name=name,
+                    email=clean_em,
+                    hashed_password=get_password_hash(pw),
+                    role=r,
+                    is_subscribed=True
+                )
+                db.add(new_u)
+            else:
+                # Ensure existing admin has hashed_password and ADMIN role if blank
+                if clean_em in ("admin@domain.com", "shivanichittam666@gmail.com"):
+                    u_exists.role = "ADMIN"
+                    u_exists.is_subscribed = True
+                    if not u_exists.hashed_password:
+                        u_exists.hashed_password = get_password_hash("admin123")
         db.commit()
     except Exception as e:
         db.rollback()
-        print("Coupon seeding notice:", e)
+        print("Seeding notice:", e)
     finally:
         db.close()
 
@@ -261,13 +286,16 @@ def verify_user(email: str, password: str) -> Optional[Dict[str, Any]]:
     try:
         clean_email = email.strip().lower()
         user = db.query(User).filter(User.email == clean_email).first()
-        if not user:
+        if not user or not user.hashed_password:
             return None
         if verify_password(password, user.hashed_password):
-            role_str = "admin" if user.role.upper() == "ADMIN" else "user"
+            role_val = (user.role or "STUDENT").strip().upper()
+            is_admin = (role_val == "ADMIN") or (clean_email in ("admin@domain.com", "shivanichittam666@gmail.com"))
+            role_str = "admin" if is_admin else "user"
             return {
                 "id": user.id,
-                "full_name": user.full_name,
+                "full_name": user.full_name or "User",
+                "email": user.email,
                 "role": role_str,
                 "is_subscribed": user.is_subscribed
             }
