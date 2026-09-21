@@ -212,10 +212,11 @@
                 const data = await response.json();
 
                 if (response.ok && data.success) {
-                    showAlert(data.message || 'Verification code sent to your inbox! Check your spam folder if needed.', 'success');
+                    showAlert('Verification code sent to your email! Please check your inbox (and spam folder).', 'success');
                     otpSection.style.display = 'block';
                     otpSection.classList.add('active');
                     otpInput.required = true;
+                    otpInput.value = '';
                     otpInput.focus();
                     startOtpTimer(600);
                     btnText.textContent = 'OTP Sent';
