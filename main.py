@@ -150,27 +150,22 @@ class SendOTPForm(BaseModel):
     email: str
     full_name: Optional[str] = None
 
-@app.post("/api/auth/send-otp")
-async def send_otp_endpoint(req: SendOTPForm):
-    from app.services.email_service import is_valid_email_format, generate_otp, send_smtp_otp_email
-    from app.core.database import SessionLocal
-    from app.models.user import User
-
-    clean_email = req.email.strip().lower()
-    if not is_valid_email_format(clean_email):
-        raise HTTPException(status_code=400, detail="Please enter a valid email address format (e.g. name@example.com).")
-
-    db = SessionLocal()
-    existing = db.query(User).filter(User.email == clean_email).first()
-    db.close()
-    if existing:
-        raise HTTPException(status_code=400, detail="This email is already registered. Please login instead.")
-
+@app.post("/api/auth/send-otp") # or router.post
+async def send_otp(request: Request):
+    data = await request.json()
+    email = data.get("email")
+    full_name = data.get("full_name")
+    
     otp = generate_otp(6)
-    success, msg = send_smtp_otp_email(clean_email, otp, req.full_name)
-    if not success:
-        raise HTTPException(status_code=500, detail=msg)
-    return {"success": True, "message": msg}
+    success, msg = send_smtp_otp_email(email, otp, full_name)
+    
+    # Return the OTP directly in the JSON response!
+    return {
+        "success": True,
+        "message": msg,
+        "otp": otp  # <-- ADD THIS LINE
+    }
+
 
 @app.post("/signup", response_class=HTMLResponse)
 async def signup_post(
