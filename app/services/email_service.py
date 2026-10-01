@@ -65,14 +65,13 @@ def verify_otp(email: str, user_otp: str) -> Tuple[bool, str]:
     record["attempts"] += 1
     
     if record["otp"] == user_otp.strip():
-        # Clean up OTP upon successful verification
         _OTP_STORE.pop(clean_email, None)
         return True, "Verification successful."
         
     return False, "Invalid verification code. Please check your email and try again."
 
 class SMTP_IPv4(smtplib.SMTP):
-    """Subclass of smtplib.SMTP that forces IPv4 socket connection to prevent Errno 101 on cloud platforms like Render."""
+    """Subclass of smtplib.SMTP that forces IPv4 socket connection."""
     def _get_socket(self, host, port, timeout):
         res = socket.getaddrinfo(host, port, socket.AF_INET, socket.SOCK_STREAM)
         if not res:
@@ -118,12 +117,15 @@ class SMTP_SSL_IPv4(smtplib.SMTP_SSL):
 
 def send_smtp_otp_email(to_email: str, otp_code: str, user_name: Optional[str] = None) -> Tuple[bool, str]:
     """
-    Sends OTP email using configured SMTP credentials with IPv4 enforcement and dual-port fallback.
+    Sends OTP email using HTTPS APIs (Brevo / Resend) or SMTP with IPv4 enforcement.
     Returns (success, message).
     """
     clean_email = to_email.strip().lower()
     
-    # Read SMTP configuration from environment variables
+    # Read configuration from environment variables
+    brevo_key = os.getenv("BREVO_API_KEY")
+    resend_key = os.getenv("RESEND_API_KEY")
+    
     smtp_host = os.getenv("SMTP_HOST") or os.getenv("MAIL_SERVER") or "smtp.gmail.com"
     smtp_port = int(os.getenv("SMTP_PORT") or os.getenv("MAIL_PORT") or "587")
     smtp_user = os.getenv("SMTP_USER") or os.getenv("MAIL_USERNAME") or ""
@@ -132,27 +134,12 @@ def send_smtp_otp_email(to_email: str, otp_code: str, user_name: Optional[str] =
     from_name = os.getenv("SMTP_FROM_NAME") or "AI Career Pro"
     use_tls = os.getenv("SMTP_TLS", "true").lower() in ("true", "1", "yes")
     
-    # Store OTP in memory regardless
+    # Store OTP in memory
     store_otp(clean_email, otp_code, validity_minutes=10)
     
-    # If SMTP is not configured, log to console for development convenience
-    if not smtp_user or not smtp_pass or "your_email" in smtp_user or "your_app_password" in smtp_pass:
-        print(f"\n==========================================")
-        print(f"[DEVELOPMENT MODE] SMTP Credentials Not Configured in .env")
-        print(f"To: {clean_email}")
-        print(f"Generated Registration OTP: {otp_code}")
-        print(f"Valid for: 10 minutes")
-        print(f"==========================================\n")
-        return True, "Verification code generated. (SMTP not configured; OTP printed to server log for development testing)"
-
     display_name = user_name.strip() if user_name else "Candidate"
     
-    # Build HTML Email Message
-    msg = MIMEMultipart("alternative")
-    msg["Subject"] = f"Your AI Career Pro Verification Code: {otp_code}"
-    msg["From"] = f"{from_name} <{from_email}>"
-    msg["To"] = clean_email
-
+    # Build email contents
     plain_text = f"""Hello {display_name},
 
 Your verification code for AI Career Pro account registration is:
@@ -176,7 +163,6 @@ The AI Career Pro Team
         <tr>
             <td align="center">
                 <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 540px; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06); border: 1px solid #e2e8f0;">
-                    <!-- Header -->
                     <tr>
                         <td align="center" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding: 32px 24px;">
                             <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.5px;">
@@ -187,8 +173,6 @@ The AI Career Pro Team
                             </p>
                         </td>
                     </tr>
-                    
-                    <!-- Content -->
                     <tr>
                         <td style="padding: 36px 32px;">
                             <h2 style="color: #0f172a; margin: 0 0 12px 0; font-size: 20px; font-weight: 700;">
@@ -196,10 +180,8 @@ The AI Career Pro Team
                             </h2>
                             <p style="color: #475569; font-size: 15px; line-height: 1.6; margin: 0 0 24px 0;">
                                 Hello <strong style="color: #0f172a;">{display_name}</strong>,<br>
-                                Thank you for creating your account. Please use the verification code below to verify your email address and activate your registration:
+                                Thank you for creating your account. Please use the verification code below to verify your email address:
                             </p>
-                            
-                            <!-- OTP Box -->
                             <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 24px;">
                                 <tr>
                                     <td align="center" style="background: #f1f5f9; border-radius: 12px; padding: 24px; border: 2px dashed #cbd5e1;">
@@ -212,14 +194,11 @@ The AI Career Pro Team
                                     </td>
                                 </tr>
                             </table>
-                            
                             <p style="color: #64748b; font-size: 13px; line-height: 1.5; margin: 0;">
-                                <strong>Security Notice:</strong> Never share this code with anyone. If you did not initiate this registration request, you can safely ignore this email.
+                                <strong>Security Notice:</strong> Never share this code with anyone. If you did not initiate this request, you can safely ignore this email.
                             </p>
                         </td>
                     </tr>
-                    
-                    <!-- Footer -->
                     <tr>
                         <td align="center" style="background-color: #f8fafc; border-top: 1px solid #e2e8f0; padding: 20px 24px;">
                             <p style="color: #94a3b8; font-size: 12px; margin: 0;">
@@ -234,88 +213,107 @@ The AI Career Pro Team
 </body>
 </html>
 """
-    msg.attach(MIMEText(plain_text, "plain"))
-    msg.attach(MIMEText(html_content, "html"))
 
-    # 1. Try HTTPS API Email Providers if configured (Resend / Brevo / SendGrid over Port 443)
-    resend_key = os.getenv("RESEND_API_KEY")
-    brevo_key = os.getenv("BREVO_API_KEY")
-
-    if resend_key:
-        try:
-            import requests
-            r = requests.post(
-                "https://api.resend.com/emails",
-                headers={"Authorization": f"Bearer {resend_key}", "Content-Type": "application/json"},
-                json={"from": "AI Career Pro <onboarding@resend.dev>", "to": [clean_email], "subject": f"Your Verification Code: {otp_code}", "html": html_content},
-                timeout=5
-            )
-            if r.status_code in (200, 201):
-                return True, "Verification code sent to your email successfully!"
-        except Exception as api_e:
-            print(f"[Resend API Notice]: {api_e}")
-
+    # --- METHOD 1: Brevo HTTPS API (Works on Render Port 443) ---
     if brevo_key:
         try:
             import requests
-            r = requests.post(
+            resp = requests.post(
                 "https://api.brevo.com/v3/smtp/email",
-                headers={"api-key": brevo_key, "Content-Type": "application/json"},
-                json={
-                    "sender": {"name": "AI Career Pro", "email": from_email},
-                    "to": [{"email": clean_email}],
-                    "subject": f"Your Verification Code: {otp_code}",
-                    "htmlContent": html_content
+                headers={
+                    "api-key": brevo_key,
+                    "Content-Type": "application/json",
+                    "accept": "application/json"
                 },
-                timeout=5
+                json={
+                    "sender": {"name": from_name, "email": from_email},
+                    "to": [{"email": clean_email, "name": display_name}],
+                    "subject": f"Your Verification Code: {otp_code}",
+                    "htmlContent": html_content,
+                    "textContent": plain_text
+                },
+                timeout=10
             )
-            if r.status_code in (200, 201):
-                return True, "Verification code sent to your email successfully!"
-        except Exception as api_e:
-            print(f"[Brevo API Notice]: {api_e}")
-
-    # 2. Try TCP SMTP Socket Connection (port 587/465 with 4s timeout)
-    connection_attempts = [
-        (smtp_port, smtp_port == 465),
-        (587, False),
-        (465, True),
-    ]
-    
-    seen = set()
-    unique_attempts = []
-    for p, ssl_flag in connection_attempts:
-        if (p, ssl_flag) not in seen:
-            seen.add((p, ssl_flag))
-            unique_attempts.append((p, ssl_flag))
-
-    last_exception = None
-
-    for port, is_ssl in unique_attempts:
-        try:
-            if is_ssl:
-                server = SMTP_SSL_IPv4(smtp_host, port, timeout=2)
+            if resp.status_code in (200, 201):
+                return True, "Verification code sent to your email successfully."
             else:
-                server = SMTP_IPv4(smtp_host, port, timeout=2)
-                if use_tls:
-                    server.starttls()
-                    
-            server.login(smtp_user, smtp_pass)
-            server.sendmail(from_email, [clean_email], msg.as_string())
-            server.quit()
-            return True, "Verification code sent to your email successfully."
-        except smtplib.SMTPAuthenticationError as e:
-            print(f"[SMTP Authentication Error] Failed for user {smtp_user}: {e}")
-            return False, "SMTP Authentication Failed: Check your Gmail App Password and SMTP_USER in Render settings."
+                print(f"[Brevo API Error] Status {resp.status_code}: {resp.text}")
         except Exception as e:
-            last_exception = e
-            print(f"[SMTP Warning] Connection attempt failed on port {port} (SSL={is_ssl}): {e}")
+            print(f"[Brevo API Exception]: {e}")
 
-    # 3. Fallback if cloud server firewall blocks SMTP ports completely
+    # --- METHOD 2: Resend HTTPS API (Port 443) ---
+    if resend_key:
+        try:
+            import requests
+            sender = f"{from_name} <{from_email}>" if "@" in from_email else "AI Career Pro <onboarding@resend.dev>"
+            resp = requests.post(
+                "https://api.resend.com/emails",
+                headers={
+                    "Authorization": f"Bearer {resend_key}",
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "from": sender,
+                    "to": [clean_email],
+                    "subject": f"Your Verification Code: {otp_code}",
+                    "html": html_content,
+                    "text": plain_text
+                },
+                timeout=10
+            )
+            if resp.status_code in (200, 201):
+                return True, "Verification code sent to your email successfully."
+            else:
+                print(f"[Resend API Error] Status {resp.status_code}: {resp.text}")
+        except Exception as e:
+            print(f"[Resend API Exception]: {e}")
+
+    # --- METHOD 3: Standard SMTP Fallback (For Local Docker / Servers with Unblocked Ports) ---
+    if smtp_user and smtp_pass and "your_email" not in smtp_user:
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = f"Your AI Career Pro Verification Code: {otp_code}"
+        msg["From"] = f"{from_name} <{from_email}>"
+        msg["To"] = clean_email
+        msg.attach(MIMEText(plain_text, "plain"))
+        msg.attach(MIMEText(html_content, "html"))
+
+        connection_attempts = [
+            (smtp_port, smtp_port == 465),
+            (587, False),
+            (465, True),
+            (2525, False)
+        ]
+        
+        seen = set()
+        for port, is_ssl in connection_attempts:
+            if (port, is_ssl) in seen:
+                continue
+            seen.add((port, is_ssl))
+
+            try:
+                if is_ssl:
+                    server = SMTP_SSL_IPv4(smtp_host, port, timeout=10)
+                else:
+                    server = SMTP_IPv4(smtp_host, port, timeout=10)
+                    if use_tls:
+                        server.starttls()
+                        
+                server.login(smtp_user, smtp_pass)
+                server.sendmail(from_email, [clean_email], msg.as_string())
+                server.quit()
+                return True, "Verification code sent to your email successfully."
+            except smtplib.SMTPAuthenticationError as e:
+                print(f"[SMTP Auth Error]: {e}")
+                return False, "SMTP Authentication Failed: Check your email credentials."
+            except Exception as e:
+                print(f"[SMTP Warning] Port {port} failed: {e}")
+
+    # --- EMERGENCY LOGGING (Never fake success) ---
     print(f"\n==========================================")
-    print(f"[SMTP NETWORK FALLBACK MODE] Cloud Network Unreachable")
-    print(f"To: {clean_email}")
-    print(f"Generated Registration OTP: {otp_code}")
-    print(f"Error Details: {last_exception}")
+    print(f"[EMAIL DELIVERY FAILED] Could not connect to mail service.")
+    print(f"Target Email: {clean_email}")
+    print(f"Active OTP: {otp_code}")
+    print(f"Hint: On Render, add BREVO_API_KEY because ports 587/465 are blocked.")
     print(f"==========================================\n")
 
-    return True, "Verification code dispatched to your email address! Please check your inbox (and spam folder)."
+    return False, "Failed to send email. Cloud host blocked SMTP ports. Please configure BREVO_API_KEY in Render."
