@@ -50,19 +50,34 @@
 
                     <!-- Email Address + Send OTP Button -->
                     <div class="input-group" style="margin-bottom: 1rem;">
-                        <label style="color: #0f172a; font-weight: 700; font-size: 0.9rem; margin-bottom: 6px; display: block;">Email Address (Requires Verification)</label>
+                        <label style="color: #0f172a; font-weight: 700; font-size: 0.9rem; margin-bottom: 6px; display: block;">Email Address</label>
                         <div style="display: flex; gap: 8px;">
                             <input type="email" id="emailInput" name="email" class="modern-input" value="{{ email if email else '' }}" placeholder="alex@example.com" required style="flex: 1; border: 2px solid #94a3b8; border-radius: 8px; padding: 12px; font-size: 0.95rem; font-weight: 600;">
-                            <button type="button" id="btnSendOtp" class="btn-get-otp" onclick="handleSendOtp()">
+                            <button type="button" id="btnSendOtp" class="btn-get-otp" onclick="handleSendOtp()" style="background: #2563eb; color: #ffffff; border: none; border-radius: 8px; padding: 0 16px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px;">
                                 <span id="btnSendOtpText">Get OTP</span>
                                 <i id="btnSendOtpIcon" class="fa-solid fa-paper-plane"></i>
                             </button>
                         </div>
-                        <small style="color: #64748b; font-size: 0.8rem; margin-top: 4px; display: block;">A 6-digit verification code will be dispatched to this email.</small>
+                        <small style="color: #64748b; font-size: 0.8rem; margin-top: 4px; display: block;">A 6-digit verification code will be generated.</small>
+                    </div>
+
+                    <!-- ON-SCREEN LIVE OTP DISPLAY BOX -->
+                    <div id="otpDisplayBanner" style="display: none; background: #eff6ff; border: 2px dashed #2563eb; border-radius: 12px; padding: 16px; text-align: center; margin-bottom: 1.25rem; animation: pulseBanner 1s ease-in-out;">
+                        <div style="font-size: 0.85rem; font-weight: 700; color: #1e40af; margin-bottom: 6px; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                            <i class="fa-solid fa-bolt" style="color: #eab308;"></i> Your Verification Code (Live OTP)
+                        </div>
+                        <div id="liveOtpValue" style="font-size: 2.2rem; font-weight: 800; letter-spacing: 8px; color: #1d4ed8; font-family: monospace; user-select: all;">
+                            ------
+                        </div>
+                        <div style="display: flex; justify-content: center; gap: 8px; margin-top: 8px;">
+                            <button type="button" onclick="autoFillOtp()" style="background: #2563eb; color: #ffffff; border: none; border-radius: 6px; padding: 6px 14px; font-size: 0.82rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i> Auto-fill Code
+                            </button>
+                        </div>
                     </div>
 
                     <!-- OTP Verification Section -->
-                    <div id="otpSection" class="otp-section-card {% if otp_sent %}active{% endif %}" style="display: {% if otp_sent %}block{% else %}none{% endif %};">
+                    <div id="otpSection" class="otp-section-card {% if otp_sent %}active{% endif %}" style="display: {% if otp_sent %}block{% else %}none{% endif %}; margin-bottom: 1rem;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                             <label style="color: #0f172a; font-weight: 800; font-size: 0.92rem; margin: 0;">
                                 <i class="fa-solid fa-key" style="color: #2563eb;"></i> Enter 6-Digit OTP
@@ -71,9 +86,9 @@
                                 <i class="fa-regular fa-clock"></i> <span id="timerCountdown">10:00</span>
                             </span>
                         </div>
-                        <input type="text" id="otpInput" name="otp" class="modern-input otp-input-control" placeholder="______" maxlength="6" pattern="[0-9]{6}" autocomplete="one-time-code" style="width: 100%; border-radius: 8px; padding: 10px;">
+                        <input type="text" id="otpInput" name="otp" class="modern-input otp-input-control" placeholder="123456" maxlength="6" pattern="[0-9]{6}" autocomplete="one-time-code" style="width: 100%; border: 2px solid #94a3b8; border-radius: 8px; padding: 12px; font-size: 1.1rem; letter-spacing: 4px; text-align: center; font-weight: 700;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
-                            <small style="color: #64748b; font-size: 0.8rem;">Didn't receive email? Check spam or resend.</small>
+                            <small style="color: #64748b; font-size: 0.8rem;">Code expires in 10 minutes.</small>
                             <button type="button" id="btnResendOtp" onclick="handleSendOtp()" style="background: none; border: none; color: #2563eb; font-weight: 700; font-size: 0.82rem; cursor: pointer; text-decoration: underline; padding: 0;">
                                 Resend OTP
                             </button>
@@ -114,6 +129,9 @@
     </div>
 
     <script>
+        let currentGeneratedOtp = '';
+        let countdownInterval = null;
+
         function togglePasswordVisibility(inputId, btn) {
             const input = document.getElementById(inputId);
             if (!input) return;
@@ -133,8 +151,6 @@
             }
         }
 
-        let countdownInterval = null;
-
         function showAlert(message, type = 'error') {
             const box = document.getElementById('alertBox');
             const msg = document.getElementById('alertMsg');
@@ -149,6 +165,14 @@
         function validateEmailSyntax(email) {
             const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             return re.test(String(email).toLowerCase());
+        }
+
+        function autoFillOtp() {
+            if (currentGeneratedOtp) {
+                const otpInput = document.getElementById('otpInput');
+                otpInput.value = currentGeneratedOtp;
+                showAlert('Code ' + currentGeneratedOtp + ' auto-filled!', 'success');
+            }
         }
 
         function startOtpTimer(durationSeconds = 600) {
@@ -180,6 +204,8 @@
             const btnIcon = document.getElementById('btnSendOtpIcon');
             const otpSection = document.getElementById('otpSection');
             const otpInput = document.getElementById('otpInput');
+            const otpDisplayBanner = document.getElementById('otpDisplayBanner');
+            const liveOtpValue = document.getElementById('liveOtpValue');
 
             const email = emailInput.value.trim();
             const fullName = fullNameInput ? fullNameInput.value.trim() : '';
@@ -196,11 +222,10 @@
                 return;
             }
 
-            // Disable button & show spinner
             btn.disabled = true;
-            btnText.textContent = 'Sending...';
+            btnText.textContent = 'Generating...';
             btnIcon.className = 'fa-solid fa-spinner fa-spin';
-            showAlert('Sending 6-digit verification code to ' + email + '...', 'info');
+            showAlert('Generating verification code...', 'info');
 
             try {
                 const response = await fetch('/api/auth/send-otp', {
@@ -212,17 +237,29 @@
                 const data = await response.json();
 
                 if (response.ok && data.success) {
-                    showAlert('Verification code sent to your email! Please check your inbox (and spam folder).', 'success');
+                    // Show OTP section
                     otpSection.style.display = 'block';
                     otpSection.classList.add('active');
                     otpInput.required = true;
-                    otpInput.value = '';
-                    otpInput.focus();
+
+                    // If OTP was returned in the response, show it directly on page!
+                    if (data.otp) {
+                        currentGeneratedOtp = String(data.otp);
+                        liveOtpValue.textContent = currentGeneratedOtp;
+                        otpDisplayBanner.style.display = 'block';
+                        
+                        // Automatically fill the input field!
+                        otpInput.value = currentGeneratedOtp;
+                        showAlert('OTP Generated: ' + currentGeneratedOtp + ' (Auto-filled on screen)', 'success');
+                    } else {
+                        showAlert('Verification code sent to your email! (Check inbox & spam)', 'success');
+                    }
+
                     startOtpTimer(600);
-                    btnText.textContent = 'OTP Sent';
+                    btnText.textContent = 'OTP Ready';
                     btnIcon.className = 'fa-solid fa-check';
                 } else {
-                    const errorDetail = data.detail || data.message || 'Failed to dispatch verification email.';
+                    const errorDetail = data.detail || data.message || 'Failed to generate verification code.';
                     showAlert(errorDetail, 'error');
                     btn.disabled = false;
                     btnText.textContent = 'Get OTP';
@@ -242,7 +279,7 @@
 
             if (otpSection.style.display === 'none' || !otpInput.value.trim()) {
                 e.preventDefault();
-                showAlert('Please click "Get OTP" to verify your email address before creating your account.', 'error');
+                showAlert('Please click "Get OTP" first to verify your email.', 'error');
                 handleSendOtp();
             }
         });
