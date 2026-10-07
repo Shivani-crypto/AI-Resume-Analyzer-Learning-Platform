@@ -42,82 +42,60 @@
                 </div>
 
                 <form id="signupForm" action="/signup" method="POST" class="modern-form">
-                    <!-- Full Name -->
-                    <div class="input-group" style="margin-bottom: 1rem;">
-                        <label style="color: #0f172a; font-weight: 700; font-size: 0.9rem; margin-bottom: 6px; display: block;">Full Name</label>
-                        <input type="text" id="fullNameInput" name="full_name" class="modern-input" value="{{ full_name if full_name else '' }}" placeholder="e.g. Alex Morgan" required style="width: 100%; border: 2px solid #94a3b8; border-radius: 8px; padding: 12px; font-size: 0.95rem; font-weight: 600;">
-                    </div>
 
-                    <!-- Email Address + Send OTP Button -->
-                    <div class="input-group" style="margin-bottom: 1rem;">
-                        <label style="color: #0f172a; font-weight: 700; font-size: 0.9rem; margin-bottom: 6px; display: block;">Email Address</label>
-                        <div style="display: flex; gap: 8px;">
-                            <input type="email" id="emailInput" name="email" class="modern-input" value="{{ email if email else '' }}" placeholder="alex@example.com" required style="flex: 1; border: 2px solid #94a3b8; border-radius: 8px; padding: 12px; font-size: 0.95rem; font-weight: 600;">
-                            <button type="button" id="btnSendOtp" class="btn-get-otp" onclick="handleSendOtp()" style="background: #2563eb; color: #ffffff; border: none; border-radius: 8px; padding: 0 16px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px;">
-                                <span id="btnSendOtpText">Get OTP</span>
-                                <i id="btnSendOtpIcon" class="fa-solid fa-paper-plane"></i>
-                            </button>
-                        </div>
-                        <small style="color: #64748b; font-size: 0.8rem; margin-top: 4px; display: block;">A 6-digit verification code will be generated.</small>
-                    </div>
+    <div class="input-group" style="margin-bottom: 1rem;">
+        <label>Full Name</label>
+        <input
+            type="text"
+            name="full_name"
+            value="{{ full_name if full_name else '' }}"
+            placeholder="e.g. Alex Morgan"
+            required
+        >
+    </div>
 
-                    <!-- ON-SCREEN LIVE OTP DISPLAY BOX -->
-                    <div id="otpDisplayBanner" style="display: none; background: #eff6ff; border: 2px dashed #2563eb; border-radius: 12px; padding: 16px; text-align: center; margin-bottom: 1.25rem; animation: pulseBanner 1s ease-in-out;">
-                        <div style="font-size: 0.85rem; font-weight: 700; color: #1e40af; margin-bottom: 6px; display: flex; align-items: center; justify-content: center; gap: 6px;">
-                            <i class="fa-solid fa-bolt" style="color: #eab308;"></i> Your Verification Code (Live OTP)
-                        </div>
-                        <div id="liveOtpValue" style="font-size: 2.2rem; font-weight: 800; letter-spacing: 8px; color: #1d4ed8; font-family: monospace; user-select: all;">
-                            ------
-                        </div>
-                        <div style="display: flex; justify-content: center; gap: 8px; margin-top: 8px;">
-                            <button type="button" onclick="autoFillOtp()" style="background: #2563eb; color: #ffffff; border: none; border-radius: 6px; padding: 6px 14px; font-size: 0.82rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
-                                <i class="fa-solid fa-wand-magic-sparkles"></i> Auto-fill Code
-                            </button>
-                        </div>
-                    </div>
+    <div class="input-group" style="margin-bottom: 1rem;">
+        <label>Email Address</label>
+        <input
+            type="email"
+            name="email"
+            value="{{ email if email else '' }}"
+            placeholder="alex@example.com"
+            required
+        >
+    </div>
 
-                    <!-- OTP Verification Section -->
-                    <div id="otpSection" class="otp-section-card {% if otp_sent %}active{% endif %}" style="display: {% if otp_sent %}block{% else %}none{% endif %}; margin-bottom: 1rem;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                            <label style="color: #0f172a; font-weight: 800; font-size: 0.92rem; margin: 0;">
-                                <i class="fa-solid fa-key" style="color: #2563eb;"></i> Enter 6-Digit OTP
-                            </label>
-                            <span id="otpTimerDisplay" class="otp-timer-text">
-                                <i class="fa-regular fa-clock"></i> <span id="timerCountdown">10:00</span>
-                            </span>
-                        </div>
-                        <input type="text" id="otpInput" name="otp" class="modern-input otp-input-control" placeholder="123456" maxlength="6" pattern="[0-9]{6}" autocomplete="one-time-code" style="width: 100%; border: 2px solid #94a3b8; border-radius: 8px; padding: 12px; font-size: 1.1rem; letter-spacing: 4px; text-align: center; font-weight: 700;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
-                            <small style="color: #64748b; font-size: 0.8rem;">Code expires in 10 minutes.</small>
-                            <button type="button" id="btnResendOtp" onclick="handleSendOtp()" style="background: none; border: none; color: #2563eb; font-weight: 700; font-size: 0.82rem; cursor: pointer; text-decoration: underline; padding: 0;">
-                                Resend OTP
-                            </button>
-                        </div>
-                    </div>
+    <div class="input-group" style="margin-bottom: 1rem;">
+        <label>Phone Number</label>
+        <input
+            type="tel"
+            name="ph_number"
+            value="{{ ph_number if ph_number else '' }}"
+            placeholder="+1 (555) 000-0000"
+        >
+    </div>
 
-                    <!-- Phone Number -->
-                    <div class="input-group" style="margin-bottom: 1rem;">
-                        <label style="color: #0f172a; font-weight: 700; font-size: 0.9rem; margin-bottom: 6px; display: block;">Phone Number</label>
-                        <input type="tel" name="ph_number" class="modern-input" value="{{ ph_number if ph_number else '' }}" placeholder="+1 (555) 000-0000" style="width: 100%; border: 2px solid #94a3b8; border-radius: 8px; padding: 12px; font-size: 0.95rem; font-weight: 600;">
-                    </div>
+    <div class="input-group" style="margin-bottom: 1.5rem;">
+        <label>Password</label>
+        <input
+            type="password"
+            name="password"
+            placeholder="Create a secure password"
+            required
+            minlength="6"
+        >
+    </div>
 
-                    <!-- Password -->
-                    <div class="input-group" style="margin-bottom: 1.5rem;">
-                        <label style="color: #0f172a; font-weight: 700; font-size: 0.9rem; margin-bottom: 6px; display: block;">Password</label>
-                        <div style="position: relative; display: flex; align-items: center;">
-                            <input type="password" id="passwordInput" name="password" class="modern-input" placeholder="Create a secure password" required minlength="6" style="width: 100%; border: 2px solid #94a3b8; border-radius: 8px; padding: 12px; padding-right: 42px; font-size: 0.95rem; font-weight: 600;">
-                            <button type="button" onclick="togglePasswordVisibility('passwordInput', this)" title="Toggle password visibility" style="position: absolute; right: 12px; background: transparent; border: none; cursor: pointer; color: #64748b; font-size: 1.1rem; padding: 4px; display: flex; align-items: center; justify-content: center; z-index: 10;">
-                                <i class="fa-solid fa-eye"></i>
-                            </button>
-                        </div>
-                    </div>
+    <button
+        type="submit"
+        id="btnSubmitForm"
+        class="btn btn-primary w-full glow-btn"
+    >
+        <span>Create Account</span>
+        <i class="fa-solid fa-arrow-right"></i>
+    </button>
 
-                    <!-- Submit Button -->
-                    <button type="submit" id="btnSubmitForm" class="btn btn-primary w-full glow-btn" style="background: #2563eb; color: #ffffff; font-weight: 800; font-size: 1.05rem; padding: 14px; border-radius: 10px; width: 100%; border: none; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px;">
-                        <span>Verify & Create Account</span>
-                        <i class="fa-solid fa-arrow-right"></i>
-                    </button>
-                </form>
+</form>
 
                 <div style="text-align: center; margin-top: 1.5rem;">
                     <a href="/login" style="color: #0f172a; font-weight: 800; font-size: 0.92rem; text-decoration: underline;">
