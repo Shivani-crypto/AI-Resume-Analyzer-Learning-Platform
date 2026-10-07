@@ -93,35 +93,35 @@ def get_current_active_admin(current_user: User = Depends(get_current_user)) -> 
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin authorization required")
     return current_user
 
-class SendOTPRequest(BaseModel):
-    email: str
-    full_name: Optional[str] = None
+# class SendOTPRequest(BaseModel):
+#     email: str
+#     full_name: Optional[str] = None
 
-class RegisterWithOTPRequest(BaseModel):
-    full_name: str
-    email: str
-    ph_number: Optional[str] = None
-    password: str
-    otp: str
-    preferred_language: Optional[str] = "English"
+# class RegisterWithOTPRequest(BaseModel):
+#     full_name: str
+#     email: str
+#     ph_number: Optional[str] = None
+#     password: str
+#     otp: str
+#     preferred_language: Optional[str] = "English"
 
-@router.post("/send-otp")
-def api_send_otp(req: SendOTPRequest, db: Session = Depends(get_db)):
-    from app.services.email_service import is_valid_email_format, generate_otp, send_smtp_otp_email
+# @router.post("/send-otp")
+# def api_send_otp(req: SendOTPRequest, db: Session = Depends(get_db)):
+#     from app.services.email_service import is_valid_email_format, generate_otp, send_smtp_otp_email
     
-    clean_email = req.email.strip().lower()
-    if not is_valid_email_format(clean_email):
-        raise HTTPException(status_code=400, detail="Invalid email format. Please provide a valid email address.")
+#     clean_email = req.email.strip().lower()
+#     if not is_valid_email_format(clean_email):
+#         raise HTTPException(status_code=400, detail="Invalid email format. Please provide a valid email address.")
         
-    existing = db.query(User).filter(User.email == clean_email).first()
-    if existing:
-        raise HTTPException(status_code=400, detail="This email is already registered. Please log in.")
+#     existing = db.query(User).filter(User.email == clean_email).first()
+#     if existing:
+#         raise HTTPException(status_code=400, detail="This email is already registered. Please log in.")
         
-    otp = generate_otp(6)
-    success, msg = send_smtp_otp_email(clean_email, otp, req.full_name)
-    if not success:
-        raise HTTPException(status_code=500, detail=msg)
-    return {"success": True, "message": msg}
+#     otp = generate_otp(6)
+#     success, msg = send_smtp_otp_email(clean_email, otp, req.full_name)
+#     if not success:
+#         raise HTTPException(status_code=500, detail=msg)
+#     return {"success": True, "message": msg}
 
 @router.post("/register", response_model=UserResponse)
 def register(user_in: UserCreate, db: Session = Depends(get_db)):
@@ -143,35 +143,35 @@ def register(user_in: UserCreate, db: Session = Depends(get_db)):
     db.refresh(db_user)
     return db_user
 
-@router.post("/register-with-otp", response_model=UserResponse)
-def register_with_otp(req: RegisterWithOTPRequest, db: Session = Depends(get_db)):
-    from app.services.email_service import is_valid_email_format, verify_otp
+# @router.post("/register-with-otp", response_model=UserResponse)
+# def register_with_otp(req: RegisterWithOTPRequest, db: Session = Depends(get_db)):
+#     from app.services.email_service import is_valid_email_format, verify_otp
     
-    clean_email = req.email.strip().lower()
-    if not is_valid_email_format(clean_email):
-        raise HTTPException(status_code=400, detail="Invalid email address.")
+#     clean_email = req.email.strip().lower()
+#     if not is_valid_email_format(clean_email):
+#         raise HTTPException(status_code=400, detail="Invalid email address.")
         
-    user = db.query(User).filter(User.email == clean_email).first()
-    if user:
-        raise HTTPException(status_code=400, detail="Email already registered. Please login.")
+#     user = db.query(User).filter(User.email == clean_email).first()
+#     if user:
+#         raise HTTPException(status_code=400, detail="Email already registered. Please login.")
         
-    is_valid, msg = verify_otp(clean_email, req.otp)
-    if not is_valid:
-        raise HTTPException(status_code=400, detail=msg)
+#     is_valid, msg = verify_otp(clean_email, req.otp)
+#     if not is_valid:
+#         raise HTTPException(status_code=400, detail=msg)
         
-    hashed_password = get_password_hash(req.password)
-    db_user = User(
-        email=clean_email,
-        full_name=req.full_name.strip(),
-        ph_number=req.ph_number.strip() if req.ph_number else None,
-        hashed_password=hashed_password,
-        preferred_language=req.preferred_language or "English",
-        role="STUDENT"
-    )
-    db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
-    return db_user
+#     hashed_password = get_password_hash(req.password)
+#     db_user = User(
+#         email=clean_email,
+#         full_name=req.full_name.strip(),
+#         ph_number=req.ph_number.strip() if req.ph_number else None,
+#         hashed_password=hashed_password,
+#         preferred_language=req.preferred_language or "English",
+#         role="STUDENT"
+#     )
+#     db.add(db_user)
+#     db.commit()
+#     db.refresh(db_user)
+#     return db_user
 
 @router.post("/login", response_model=Token)
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
