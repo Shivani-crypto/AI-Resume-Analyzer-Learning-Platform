@@ -233,26 +233,11 @@ sequenceDiagram
    RAZORPAY_KEY_SECRET="your_key_secret"
    ```
 
-### 4.6. Gmail SMTP App Password Setup (for Email Verification & Receipts)
-1. Log in to your Google Account and go to [Security Settings](https://myaccount.google.com/security).
-2. Enable **2-Step Verification**.
-3. Search for **App Passwords** in the Google search bar.
-4. Create an App Password named `CareerPro Mailer`.
-5. Copy the 16-character generated code (e.g., `qfifnugkvgsukrhi`).
-6. Update `.env`:
-   ```env
-   SMTP_HOST="smtp.gmail.com"
-   SMTP_PORT=587
-   SMTP_USER="your_email@gmail.com"
-   SMTP_PASSWORD="your_16_char_app_password"
-   SMTP_FROM_EMAIL="your_email@gmail.com"
-   SMTP_FROM_NAME="Career Pro Platform"
-   SMTP_TLS=True
-   ```
-
----
-
 ## 5. Module-by-Module Methodology & Setup Instructions
+
+> **Authentication Note:** Email/SMTP functionality has been removed from the current version. Registration and authentication no longer depend on Gmail SMTP, SMTP credentials, email verification messages, or email receipt delivery.
+
+
 
 ```
 c:\Users\TruProjects\Documents\test
